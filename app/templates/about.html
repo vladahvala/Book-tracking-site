@@ -1,0 +1,768 @@
+{% extends "base.html" %}
+
+{% block title %}Book Trends{% endblock %}
+
+{% block content %}
+
+
+<style>
+    .contact-info {
+        margin-bottom: 20px;
+    }
+    .social-links a {
+        margin-right: 10px;
+        font-size: 1.5rem;
+    }
+    .domain-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .domain-list li {
+        margin-bottom: 10px;
+    }
+
+    
+/* Main CSS */
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f0f8ff;
+  /* padding: 20px 0 30px; */
+  border-bottom: 2px solid #ddd;
+}
+
+
+/* Scroll to Top Button */
+.scroll-top {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px rgba(0, 128, 0, 0.2);
+  z-index: 1000;
+  transition: all 1.5s ease-in-out;
+  cursor: pointer;
+
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-100vh) rotate(180deg);
+}
+
+.scroll-top i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: green;
+  transition: color .3s ease-in-out;
+  z-index: 6;
+}
+
+.scroll-top svg path {
+  fill: none;
+  stroke: green;
+  stroke-width: 4;
+  transition: stroke-dashoffset 300ms ease, color .3s ease-in-out;
+  z-index: 6;
+}
+
+.scroll-top.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+
+/* Page container (body) */
+.page-content{
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* General */
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+  
+strong {
+  font-weight: 700;
+}
+
+img {
+  max-width: 100%;
+}
+
+li {
+  font-size: 1.125rem;
+  color: #222222;
+  margin: 0 0 15px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+h1 {
+  color: #000000;
+  font-size: 36px;
+}
+h2 {
+  color: #222222;
+  font-size: 30px;
+}
+h3 {
+  color: #444444;
+  font-size: 1.75rem;
+}
+h4 {
+  color: #555555;
+  font-size: 22px;
+}
+h5 {
+  color: #666666;
+  font-size: 20px;
+}
+h6 {
+  color: #777777;
+  font-size: 18px;
+}  
+
+section {
+  padding: 90px 15px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.container img {
+  padding: 0.25rem;
+  border: 1px solid red;
+  border-radius: 0.25rem;
+}
+  
+
+/* Learn more/Conact button */  
+.learn_more {
+  background-color: #00A09A;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 1.3);
+  transition: background 0.3s ease-in-out;
+}
+.learn_more:hover {
+  background: linear-gradient(to right, orange, red);
+}   
+  
+
+/* Banner container */ 
+.banner {
+  background: -webkit-gradient(linear, left top, right top, from(#8F87F1), to(#C68EFD), url(https://i.pinimg.com/736x/29/b3/18/29b318462b768cc8865c580f4a8d4e90.jpg)) no-repeat;
+  background: linear-gradient(90deg, #8F87F1, #C68EFD), url(https://i.pinimg.com/736x/29/b3/18/29b318462b768cc8865c580f4a8d4e90.jpg) no-repeat;
+  background-position: top right;
+  background-blend-mode: overlay;
+  background-size: cover;
+}
+
+.banner h1 {
+  color: black;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.banner p {
+  color: black;
+  font-size: 1.375rem;
+  padding-left: 9px;
+  letter-spacing: 1.5px;
+  background-color: white;
+  font-weight: 100;
+}  
+
+
+  
+/* First section */ 
+.first {
+  background-color: #FFFFFF;
+  background-image: linear-gradient(76deg, #C68EFD 40%, #8F87F1 64%);
+}
+
+.first .container {
+  max-width: 800px;
+  color: #000000;
+}
+
+.first .container p,
+.right-content p,
+.left-content p{
+  font-size: 1.125rem;
+color: #222222;
+margin: 0 0 15px;
+line-height: 1.6;
+}  
+  
+
+/* Second section */ 
+.second {
+  background-color: #8F87F1;
+}
+
+.second .container {
+  display: block;
+}
+
+
+.second .container .right-content h2 {
+  margin: 30px 0 0;
+}  
+  
+
+/* Third section */ 
+.third {
+  background-color: #A78BF7;
+}
+
+
+.third .container .left-content {
+  -ms-flex-preferred-size: 68%;
+      flex-basis: 68%;
+      margin-right: 64px;
+}
+
+.third .container .right-img {
+  -ms-flex-preferred-size: 30%;
+      flex-basis: 40%;
+}
+
+
+/* Fourth section */   
+.four {
+  background-color: #C68EFD;
+}
+
+.four .container {
+  display: block;
+}
+
+.four .container .member {
+  background-color:#FFA559;
+  padding: 20px;
+  margin: 0 0 60px;
+  border-radius: 5px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+          box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}  
+  
+.member img{
+  height: 300px;
+  width: 600px;
+}
+
+.member p,
+.member h3{
+  margin-top: 8px;
+}  
+
+.social  a {
+  text-decoration: none; 
+  color: inherit; 
+  font-size: 24px; 
+  margin-right: 10px; 
+  transition: color 0.3s ease;
+  cursor: pointer; 
+}
+.social  a:hover {
+  color: #00CEC8; 
+}    
+  
+.four .container .member .social {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+}
+
+.four .container .member .social a img {
+  border: none;
+  max-width: 40px;
+}  
+
+.four .container .member {
+  background-color: #FFA559;
+  padding: 20px;
+  margin: 0 0 60px;
+  border-radius: 5px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+          box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}  
+
+/* Ефект при наведенні */
+.four .container .member:hover {
+  transform: scale(1.05);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 5px 15px;
+}
+
+  
+  
+/* Fifth section */
+.five {
+  background-color: #E2B0EF;
+  overflow: hidden; 
+}
+
+.five .container {
+  width: 100%; 
+  max-width: 700px; 
+  -webkit-box-shadow: rgba(0, 0, 0, 0.8) 0px 7px 29px 0px;
+  box-shadow: rgba(0, 0, 0, 0.8) 0px 7px 29px 0px;
+  overflow: hidden;
+}
+
+.five .container .video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; 
+  height: 0;
+
+}  
+
+.video-wrapper {
+  width: 700px;
+  right: 13px;
+}
+
+.five .container .video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+/* Sixth section */
+.six .container {
+  text-align: center;
+  max-width: 800px;
+  margin-bottom: 25px;
+}
+
+.six {
+  background-color: #FED2E2;
+}
+
+.six h4{
+  margin-bottom: 30px;
+}
+
+.six p{
+  margin-top: 30px;
+}  
+  
+.center-img img{
+  height: 333px;
+}
+
+.center-img img {
+  height: 333px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Ефект при наведенні */
+.center-img img:hover {
+  transform: scale(1.05);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 5px 15px;
+}
+
+  
+
+/* Section slide-in animation */
+.first, .second, .third, .four, .five, .six {
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.second, .four, .six {
+  transform: translateX(50px);
+}
+
+.first.show, .second.show, .third.show, .four.show, .five.show, .six.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+
+
+/* Responsive adjustments for product grid */
+
+@media (max-width: 768px) { /* Phones */
+  header {
+      display: grid;
+      justify-content: center;
+  }
+
+  .logo{
+      margin: 0;
+      justify-content: center;
+      align-items: center; 
+  }
+
+  .phone_nums {
+      text-align: center;
+      margin-right: 0;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 23px;
+  }
+  .phone_nums p {
+      text-align: center;
+      font-size: 20px;
+  }
+
+  .underlined {
+      text-align: center;
+      margin-top: 10px;
+  }
+
+
+  .menu__links {
+      display: grid;
+      align-items: center;
+      justify-content: center;
+      gap: 25px;
+  }
+  .menu__links a::after {
+      display: none;
+  }
+
+  .third .right-img{
+    margin-top: 30px;
+  }
+}
+
+
+@media (min-width: 768px) { 
+  h1 {
+    font-size: 80px;
+  }
+  h2 {
+    font-size: 60px;
+  }
+  h4 {
+    font-size: 40px;
+  }
+  h5 {
+    font-size: 35px;
+  }
+  h6 {
+    font-size: 32px;
+  }
+
+  .second .container {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+  }
+  .second .container .left-img {
+    -ms-flex-preferred-size: 30%;
+        flex-basis: 50%;
+  }
+  .second .container .right-content {
+    -ms-flex-preferred-size: 65%;
+        flex-basis: 66%;
+        margin-left: 90px;
+  }
+  .second .container .right-content h2 {
+    margin: 0;
+  }
+
+  .third .container {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+  }
+
+  .four .container {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+  }
+  .four .container .member {
+    -ms-flex-preferred-size: 47%;
+    flex-basis: 47%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+  }
+  .four .container .member h3 {
+    font-size: 32px;
+  }
+}
+
+.navbar-collapse{
+    height: 29px;
+    margin-top: 15px;
+}
+
+</style>
+
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-body">
+
+            <!-- Scroll top button -->
+<!-- Scroll top button -->
+<div class="scroll-top">
+    <i class="ri-arrow-up-line"></i>
+    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="-1 -1 102 102">
+      <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 0.0228267; transition: stroke-dashoffset 10ms linear;"/>
+    </svg>
+  </div>
+  
+            <!-- Banner -->
+      <section class="banner">
+        <div class="container">
+          <h1>About us</h1>
+          <p>A book site, where you can track/search/download books and even get book recommendations!</p>
+        </div>     
+      </section>
+
+      <!-- First -->
+      <section class="first">
+        <div class="container">
+          Discover your next favorite read with ease! 
+          Here, you can search, track, and download books from a vast collection across genres. 
+          Not sure what to read next? Serach for personalized recommendations tailored to your taste. 
+          Whether you're a casual reader or a bookworm, we are here to make your reading journey smarter 
+          and smoother.
+        </div>
+      </section>
+
+      <!-- Second -->
+      <section class="second">
+        <div class="container">
+          <div class="left-img">
+            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="Person">
+          </div>
+          <div class="right-content">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. 
+            Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. 
+            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
+            Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. 
+            Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem.
+            <button class="learn_more">Дізнатися більше ⇒</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Third -->
+      <section class="third">
+        <div class="container">
+          <div class="left-content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. 
+            Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. 
+            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
+            Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. 
+            Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem.</p>
+            <button class="learn_more">Зв'яжіться з нами ⇒</button>
+          </div>
+          <div class="right-img">
+            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
+          </div>
+        </div>    
+      </section>  
+
+      <!-- Fourth -->
+      <section class="four">
+        <div class="container">
+          <div class="member">
+            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
+            <h3>Lorem Ipsum</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus. </p>
+            <div class="social">
+              <a title="Instagram" href="index.html">
+                <i class="ri-instagram-fill"></i>
+              </a>
+              <a title="Facebook" href="index.html">
+                <i class="ri-facebook-box-fill"></i>
+              </a>
+              <a title="Twitter" href="index.html">
+                <i class="ri-twitter-fill"></i>
+              </a>
+            </div>
+          </div>  
+          <div class="member">
+            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
+            <h3>Lorem Ipsum</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus.</p>
+            <div class="social">
+              <a title="Instagram" href="index.html">
+                <i class="ri-instagram-fill"></i>
+              </a>
+              <a title="Facebook" href="index.html">
+                <i class="ri-facebook-box-fill"></i>
+              </a>
+              <a title="Twitter" href="index.html">
+                <i class="ri-twitter-fill"></i>
+              </a>
+            </div> 
+          </div>  
+        </div>   
+      </section>  
+
+      <!-- Fifth -->
+      <section class="five">
+        <div class="container">
+            <div class="video-wrapper">
+                <iframe src="https://youtu.be/PzGI-FBzcNE?si=_l_QLBStEbcwNSeQ" frameborder="0" 
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+            </div>      
+        </div>    
+    </section>
+    
+
+      <!-- Sixth -->
+      <section class="six">
+        <div class="container">
+          <h4>Lorem Ipsum</h4>
+          <div class="center-img">
+            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="discount cupons">
+          </div>
+          <p><i>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus.</i></p>
+          <button class="learn_more">Зв'яжіться з нами ⇒</button>
+        </div>
+      </section>
+    </div>
+  
+    <!--=============== SCRIPT ===============-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        
+/* Slide-in sections animation */
+document.addEventListener("DOMContentLoaded", function () {
+    const sections = document.querySelectorAll(".first, .second, .third, .four, .five, .six");
+  
+    function checkVisibility() {
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+          section.classList.add("show");
+        }
+      });
+    }
+  
+    window.addEventListener("scroll", checkVisibility);
+    checkVisibility(); 
+});
+
+
+
+    /* Scroll to Top Button */
+   /* Scroll to Top Button */
+/* Scroll to Top Button */
+/* Scroll to Top Button */
+$(document).ready(function() {
+    // Показуємо кнопку, коли прокрутка більше 100px
+    $(window).on('scroll', function() {
+        $('.scroll-top').toggleClass('show', $(window).scrollTop() >= 100);
+    });
+
+    // Прокручування до верху при натисканні на стрілку
+    $('.scroll-top').on('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+
+    let path = document.querySelector('.scroll-top svg path');
+    if (path) {
+        let length_path = path.getTotalLength();
+
+        // Ініціалізація стилів для анімації
+        path.style.strokeDasharray = length_path + ' ' + length_path;
+        path.style.strokeDashoffset = length_path;
+        path.style.transition = 'stroke-dashoffset 10ms linear';
+
+        function updateScrollTop() {
+            let offset = document.documentElement.scrollHeight - window.innerHeight;
+            let scrollPos = window.scrollY;
+
+            if (offset > 0) {
+                let newOffset = length_path - (scrollPos * length_path) / offset;
+                path.style.strokeDashoffset = newOffset;
+            }
+        }
+
+        updateScrollTop(); // Викликаємо для початкового стану
+
+        window.addEventListener('scroll', updateScrollTop);
+    }
+});
+
+
+    </script>
+       
+
+  </body>
+</html>
+
+
+
+
+
+
+
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block js %}
+{% endblock %}

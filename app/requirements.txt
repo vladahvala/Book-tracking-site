@@ -1,0 +1,14 @@
+https://pypi.org/project/django-admin-interface/
+pip install PyMuPDF
+https://bootswatch.com/
+https://django-adminlte2-pdq.readthedocs.io/en/latest/quickstart.html
+python -m pip install django-adminlte2-pdq
+pip install gensim
+pip install django-import-export
+pip3 install pymupdf
+pip install smart_open
+pip install django-ckeditor
+
+
+
+

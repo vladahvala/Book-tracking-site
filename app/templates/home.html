@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Book Search{% endblock %}
+
+{% block css %}
+    <!-- Additional CSS if needed -->
+    <style>
+        body {
+            
+            background-color: #f8f9fa; /* Light gray background */
+        }
+
+        .result-item {
+            margin-bottom: 20px; /* Space between each result item */
+            padding: 15px; /* Padding around each result item */
+            background-color: #ffffff; /* White background */
+            border: 1px solid #dee2e6; /* Light border */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .result-item img {
+            max-width: auto; /* Limit image width */
+            height: auto; /* Maintain aspect ratio */
+        }
+        .similar-books {
+            background-color: #ffffff; /* White background */
+            padding: 20px; /* Padding around content */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .similar-book-item {
+            margin-bottom: 20px; /* Space between each similar book item */
+            padding: 15px; /* Padding around each similar book item */
+            background-color: #f0f0f0; /* Light gray background */
+            border: 1px solid #dee2e6; /* Light border */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .bg-image {
+            background-image: url('https://png.pngtree.com/background/20210715/original/pngtree-gradient-purple-technology-lines-background-picture-image_1256633.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .btn-warning {
+            background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
+            filter: none;
+            border: 1px solid #8F87F1;
+            color: black;
+        }
+        .btn-warning:not(.disabled):hover {
+            background-image: linear-gradient(#FED2E2, #E9A5F1 50%, #C68EFD);
+            filter: none;
+            border: 1px solid #9c5600;
+            color: black;
+            box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2); /* Увігнута тінь */
+            transform: translateY(2px); /* Ефект натискання */
+        }
+
+        .active>.page-link, .page-link.active {
+            z-index: 3;
+            color: black;
+            background-color: #8F87F1;
+            border-color: #36587c;
+        }
+
+        .table-striped>tbody>tr:nth-of-type(odd) > * {
+        --bs-table-color-type: var(--bs-table-striped-color);
+        --bs-table-bg-type: #f5cee135;
+        }
+
+
+        .text-info {
+            --bs-text-opacity: 1;
+            color: #7c71ef !important;
+        }
+
+        .page-link {
+            position: relative;
+            display: block;
+            padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
+            font-size: var(--bs-pagination-font-size);
+            color: #36587c;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="card bg-dark text-white bg-image" style="height:500px;">
+        <div class="card-img-overlay">
+            <h2 class="card-title text-uppercase">Get Book Recommendations!</h2><hr>
+            <!--<p class="card-text text-uppercase">Our cutting-edge AI analyzes current trends from Google News to recommend books tailored to your interests. Discover new reads with our intelligent system.</p>-->
+            <p class="card-text">Uses AI for work</p>
+            <!-- Search Form -->
+            <form method="get" action="{% url 'search_books' %}" class="d-flex justify-content-center w-100">
+                <div class="input-group w-75">
+                    <input type="text" name="query" class="form-control" value="{{ query }}" placeholder="Search...">
+                    <button type="submit" class="btn btn-warning">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {{ trend_graph|safe }}
+    <div class="container-fluid mt-4">
+        {% if query %}
+            <h3 class="text-primary"></h3>
+            <div class="row">
+                <div class="col-md-9">
+                <div class="card">
+                    <h6 class="card-header bg-primary text-white">Results for '{{ query }}'</h3>
+                    <div class="card-body">
+                         <div class="table-responsive">
+                        <table id="bookTable" class="table table-striped table-bordered table-hover w-100 table-display" >
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>File Name</th>
+                                <th>Similarity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book, similarity in similar_books %}
+                                <tr>
+                                    <td>{{ book.book_title }}</td>
+                                    <td>{{ book.author }}</td>
+                                    <td>{{ book.book_name }}</td>
+                                    <td>
+                                        {% if similarity >= 0.7 %}
+                                            <span class="text-success">{{ similarity|floatformat:1 }}</span>
+                                        {% elif similarity >= 0.5 %}
+                                            <span class="text-warning">{{ similarity|floatformat:1 }}</span>
+                                        {% else %}
+                                            <span class="text-danger">{{ similarity|floatformat:1 }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'book_detail' book.id %}" class="btn btn-primary btn-sm">View</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="similar-books mt-2">
+                        <h4 class="text-primary">Recommended Similar Books</h4>
+                        <div class="row">
+                            {% for book, similarity in similar_books %}
+                                <div class="col-md-12 mb-1">
+                                    <div class="card result-item">
+                                        <img src="{{ book.image.url }}" class="card-img-top" alt="{{ book.book_title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-primary">{{ book.book_title }}</h5><hr>
+                                            <p class="card-text text-primary">File name: {{ book.book_name }} [ ISBN: {{ book.ISBN }} ]</p>
+                                            <p class="card-text text-primary">Author: {{ book.author }}</p>
+                                            <div>
+                                                {% if similarity >= 0.7 %}
+                                                    <h6 class="text-info">Similarity:</h6><span class="text-success"><b>{{ similarity|floatformat:1 }}</b></span>
+                                                {% elif similarity >= 0.5 %}
+                                                    <h6  class="text-info">Similarity:</h6><span class="text-warning"><b>{{ similarity|floatformat:1 }}</b></span>
+                                                {% else %}
+                                                    <h6  class="text-info">Similarity:</h6><span class="text-danger"><b>{{ similarity|floatformat:1 }}</b></span>
+                                                {% endif %}
+                                            </div>
+                                            <a href="{% url 'book_detail' book.id %}" class="btn btn-primary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function() {
+            $('#bookTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "lengthChange": false,
+                "autoWidth": true,
+                "responsive": true
+            });
+        });
+
+        document.querySelectorAll('.table-striped>tbody>tr:nth-of-type(odd)').forEach(row => {
+    row.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#f5cee135'; // Фон при наведенні
+    });
+    row.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#f5cee135'; // Фон після наведення
+    });
+});
+
+    </script>
+    
+{% endblock %}

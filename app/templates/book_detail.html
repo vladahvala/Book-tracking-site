@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.book_title }}{% endblock %}
+
+{% block css %}
+    <style>
+        body {
+            padding-top: 2.5rem; /* Adjusted for navbar height */
+            background-color: #f8f9fa; /* Light gray background */
+        }
+        .book-details {
+            background-color: #ffffff; /* White background */
+            padding: 20px; /* Padding around content */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .book-image {
+            max-width: 100%; /* Responsive image */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .similar-books {
+            background-color: #ffffff; /* White background */
+            padding: 20px; /* Padding around content */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+        .similar-book-item {
+            margin-bottom: 20px; /* Space between each similar book item */
+            padding: 15px; /* Padding around each similar book item */
+            background-color: #f0f0f0; /* Light gray background */
+            border: 1px solid #dee2e6; /* Light border */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Main content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Book details column -->
+            <div class="col-md-8">
+                <div class="card bg-white">
+                    <h4 class="card-header  bg-primary text-lowercase"></h4>
+                    <div class="card-body">                        
+                        <ul class="list-group list-group-flush ">
+                            <div class="row ">
+                                <div class="col-md-4">
+                                    <img src="{{ book.image.url }}" class="card-img-top img-thumbnail" alt="{{ book.book_title }}">
+                                </div>
+                                <div class="col-md-8">
+                            <li class="list-group-item">
+                                <strong>Book Name:</strong> {{ book.book_name }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Author:</strong> {{ book.author }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Created Date:</strong> {{ book.created_date|date:"Y-m-d" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>File:</strong> <a href="{{ book.file.url }}" class="btn btn-danger btn-sm">Download</a>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Number of Pages:</strong> {{ num_pages }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>File Size:</strong> {{ file_size_mb|floatformat:"2" }} MB
+                            </li>
+
+
+                            <li class="list-group-item">
+                                <strong>Category:</strong> {{ book.Category }} 
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>ISBN:</strong> {{ book.ISBN }} 
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>Publication_Country:</strong> {{ book.Publication_Country }} 
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>Language:</strong> {{ book.Language }} 
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>Publication_Year:</strong> {{ book.Publication_Year}} 
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>Title:</strong> {{ book.book_title }}
+                            </li>
+
+                            <li class="list-group-item">
+                                <strong>Annotation:</strong> {{ book.book_annotation|safe }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+              
+            </div>
+                 
+            
+            <!-- Similar books column -->
+            <div class="col-md-4">
+                <div class="similar-books">
+                    <h3 class="text-primary">Recommended Similar Books</h3>
+                    {% if similar_books %}
+                        {% for similar_book, similarity in similar_books %}
+                            <div class="similar-book-item">
+                                <h5>{{ similar_book.book_title }}</h5>
+                                <p><strong>Author:</strong> {{ similar_book.author }} <b class="text-warning">[ in {{ similar_book.Publication_Country}} ]</b></p>
+                                    {% if similarity >= 0.7 %}
+                                    <p><strong>Similarity: </strong><span class="text-success"><b>{{ similarity|floatformat:1 }}</b></span>
+                                    {% elif similarity >= 0.5 %}
+                                    <p><strong>Similarity: </strong><span class="text-primary"><b>{{ similarity|floatformat:1 }}</b></span>
+                                    {% else %}
+                                    <p><strong>Similarity: </strong><span class="text-danger"><b>{{ similarity|floatformat:1 }}</b></span>
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'book_detail' similar_book.id %}" class="btn btn-primary btn-sm">View Details</a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No similar books found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
