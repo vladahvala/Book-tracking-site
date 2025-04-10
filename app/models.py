@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 from ckeditor.fields import RichTextField
 
 class Book(models.Model):
@@ -20,3 +21,22 @@ class Book(models.Model):
 
     def __str__(self):
         return self.book_title
+
+class UserBook(models.Model):
+    STATUS_CHOICES = [
+        ('unread', 'Unread'),
+        ('reading', 'Reading'),
+        ('read', 'Read'),
+        ('planning', 'Planning'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True)  # For anonymous users
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
+
+    def __str__(self):
+        return f"{self.book.title} - {self.status}"
+
+    def get_status_display(self):
+        return dict(self.STATUS_CHOICES).get(self.status, self.status)

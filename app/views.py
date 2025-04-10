@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import F
 from .models import Book
 from .utils import find_similar_books
@@ -9,7 +9,9 @@ import os
 import fitz  # PyMuPDF
 from django.db.models import Count
 import plotly.graph_objs as go
-
+from .models import Book, UserBook
+from .forms import UserBookForm
+from django.core.paginator import Paginator
 
 def search_books(request):
     query = request.GET.get('query', '')
@@ -35,6 +37,13 @@ def extract_pdf_details(pdf_path):
 
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
+# Перевірка на наявність session_key
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()  # Створюємо сесію, якщо вона відсутня
+
+    # Тепер отримуємо або створюємо запис UserBook
+    user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
     
     # Find similar books
     all_books = Book.objects.exclude(pk=pk)  # Exclude the current book from recommendations
@@ -43,12 +52,35 @@ def book_detail(request, pk):
     # Extract PDF details
     pdf_path = book.file.path
     num_pages, file_size_mb = extract_pdf_details(pdf_path)
+    
+    # Handle POST request for updating book status
+    if request.method == 'POST':
+        status = request.POST.get('status')
+
+        # Use session for anonymous users, or 'user' for logged-in users
+        session_key = request.session.session_key
+        if not session_key:
+            request.session.create()  # Create a session if not exists
+        
+        # Use session_key instead of user model for anonymous users
+        user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
+
+        if status == 'unread':
+            # Remove book from the user's profile
+            user_book.delete()
+        else:
+            # Update the status
+            user_book.status = status
+            user_book.save()
+
+        return redirect('book_detail', pk=pk)
 
     context = {
         'book': book,
         'similar_books': similar_books,
         'num_pages': num_pages,
         'file_size_mb': file_size_mb,
+        'user_book': user_book,  # Передаємо user_book у контекст
     }
     return render(request, 'book_detail.html', context)
 
@@ -103,24 +135,76 @@ def about(request):
     return render(request, 'about.html', )
 
 
+def profile(request):
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()
 
+    # Handling POST request for updating book status
+    if request.method == 'POST':
+        book_id = request.POST.get('book')
+        status = request.POST.get('status')
 
+        if book_id and status:
+            try:
+                book = Book.objects.get(id=book_id)
+                user_book = UserBook.objects.get(session_key=session_key, book=book)
+                user_book.status = status
+                user_book.save()
+                return redirect('profile')
+            except (Book.DoesNotExist, UserBook.DoesNotExist):
+                pass
 
+    # Getting page parameters from GET request
+    reading_page = request.GET.get('reading_page', 1)
+    read_page = request.GET.get('read_page', 1)
+    planning_page = request.GET.get('planning_page', 1)
 
+    # Fetching books and creating paginators for each category
+    reading_books = UserBook.objects.filter(status='reading', session_key=session_key)
+    read_books = UserBook.objects.filter(status='read', session_key=session_key)
+    planning_books = UserBook.objects.filter(status='planning', session_key=session_key)
 
+    reading_paginator = Paginator(reading_books, 6)
+    read_paginator = Paginator(read_books, 6)
+    planning_paginator = Paginator(planning_books, 6)
 
+    # Getting the necessary pages
+    user_books_reading = reading_paginator.get_page(reading_page)
+    user_books_read = read_paginator.get_page(read_page)
+    user_books_planning = planning_paginator.get_page(planning_page)
 
+    form = UserBookForm()
 
+    return render(request, 'profile.html', {
+        'user_books_reading': user_books_reading,
+        'user_books_read': user_books_read,
+        'user_books_planning': user_books_planning,
+        'form': form,
+    })
+def book_status(request, pk):
+    book = get_object_or_404(Book, pk=pk)
 
+    # шукаємо, чи вже є запис UserBook
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()  # Створюємо сесію, якщо вона відсутня
 
+    # Тепер отримуємо або створюємо запис UserBook
+    user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
 
+    if request.method == 'POST':
+        form = UserBookForm(request.POST, instance=user_book)
+        if form.is_valid():
+            if form.cleaned_data['status'] == 'unread':
+                user_book.delete()  # якщо статус "непрочитано" — видаляємо
+            else:
+                form.save()  # оновлюємо статус
+            return redirect('profile')  # перенаправляємо до профілю
+    else:
+        form = UserBookForm(instance=user_book)
 
-
-
-
- 
-
-
-
-
-   
+    return render(request, 'app/book_detail.html', {
+        'book': book,
+        'form': form,
+    })
