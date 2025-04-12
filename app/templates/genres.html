@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Book Search{% endblock %}
+
+{% block content %}
+
+<style>
+    .category-btn{
+        width: 95%;
+        height: 47px;
+        margin-bottom: 12px;
+    }
+
+    .subcategory-btn{
+        width: 50%;
+        margin-bottom: 12px;
+    }
+
+    a {
+        color: #C68EFD;
+        text-decoration: underline;
+    }
+
+    /* Стиль для всіх кнопок */
+    button {
+        background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
+        filter: none;
+        border: 1px solid #8F87F1;
+        color: black!important;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-image 0.3s, border 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+
+    /* Стиль для кнопок при наведенні */
+    button:not(.disabled):hover {
+        background-image: linear-gradient(#FED2E2, #E9A5F1 50%, #C68EFD);
+        filter: none;
+        border: 1px solid #9c5600;
+        color: black;
+        box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2); /* Увігнута тінь */
+        transform: translateY(2px); /* Ефект натискання */
+    }
+
+    li .book-list{
+        height: 40px;
+    }
+</style>
+    <h1>Welcome to the Genre Page!</h1>
+
+    <!-- Основні категорії у вигляді випадаючих списків -->
+    <div class="categories">
+        {% for category, subcategories in categories.items %}
+        <div class="category">
+          <button class="category-btn" onclick="toggleSubcategories('{{ category }}')">{{ category }}</button>
+          <ul id="subcategories-{{ category }}" style="display:none;">
+            {% for subcategory in subcategories %}
+              <li>
+                <button class="subcategory-btn" onclick="toggleBooksBySubcategory('{{ subcategory }}')">{{ subcategory }}</button>
+                <ul id="books-{{ subcategory }}" style="display:none;">
+                  {% for genre, books in books_by_subcategory %}
+                    {% if genre == subcategory %}
+                      {% for book in books %}
+                      <li class="book-list">
+                        <a href="{% url 'book_detail' book.id %}">{{ book.book_title }}</a> by {{ book.author }}
+                      </li>
+                      
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+      
+    </div>
+
+    <script>
+        // Функція для перемикання підкатегорій
+        function toggleSubcategories(category) {
+            let subcategories = document.getElementById('subcategories-' + category);
+            if (subcategories.style.display === 'none') {
+                subcategories.style.display = 'block';
+            } else {
+                subcategories.style.display = 'none';
+            }
+        }
+
+        // Функція для завантаження та показу книг за підкатегорією
+        function toggleBooksBySubcategory(subcategory) {
+            let booksList = document.getElementById('books-' + subcategory);
+            if (booksList.style.display === 'none') {
+                booksList.style.display = 'block';
+            } else {
+                booksList.style.display = 'none';
+            }
+        }
+    </script>
+
+{% endblock %}

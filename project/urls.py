@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path,include
 
 urlpatterns = [
@@ -22,7 +23,8 @@ urlpatterns = [
     path("",include("app.urls")),
         path('', include('adminlte2_pdq.urls')),
     # Django Account Routes - Styled in AdminLTE2
-    path('accounts/', include('django.contrib.auth.urls')),
+    # path('accounts/', include('django.contrib.auth.urls')),
+     path('login/', auth_views.LoginView.as_view(template_name='registration/login_register.html'), name='login'),
 ]
 
 from django.conf import settings

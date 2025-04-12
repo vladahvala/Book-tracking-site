@@ -144,15 +144,15 @@
                                     {% csrf_token %}
                                     <input type="hidden" name="book" value="{{ book.id }}">  <!-- додаємо ID книги -->
                                     <strong><label for="status">Status:</label></strong>
-                                    <select name="status">
+                                    <select name="status" {% if not user.is_authenticated %}disabled{% endif %}>
                                         <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
                                         <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
                                         <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
                                         <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
                                     </select>
                                     
-                                    <p><button class="update-status" type="submit">Update Status</button></p>
-                                </form>
+                                    <p><button class="update-status" type="submit" {% if not user.is_authenticated %}disabled{% endif %}>Update Status</button></p>
+                                </form>                                
                             </li>
 
                             
@@ -160,35 +160,54 @@
                         </ul>
                     </div>
                 </div>
-              
+              <h2>Comments</h2>
+              {% if not book.comments.all %}
+                No comments yet <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
+                Add One</a>
+              {% else %}  
+              <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
+              <br><br>
+                    {% for comment in book.comments.all %}
+                        <strong>
+                            {{ comment.name }} - {{ comment.date_added }}
+                        </strong>    
+                        <br>
+                        {{ comment.body }}
+                        <br><br><br>
+                    {% endfor %}     
+              {% endif %}  
+
+              <br>
+
+              <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
             </div>
-                 
+       
+
             
-            <!-- Similar books column -->
-            <div class="col-md-4">
-                <div class="similar-books">
-                    <h3 class="text-primary">Recommended Similar Books</h3>
-                    {% if similar_books %}
-                        {% for similar_book, similarity in similar_books %}
-                            <div class="similar-book-item">
-                                <h5>{{ similar_book.book_title }}</h5>
-                                <p><strong>Author:</strong> {{ similar_book.author }} <b class="text-warning">[ in {{ similar_book.Publication_Country}} ]</b></p>
-                                    {% if similarity >= 0.7 %}
-                                    <p><strong>Similarity: </strong><span class="text-success"><b>{{ similarity|floatformat:1 }}</b></span>
-                                    {% elif similarity >= 0.5 %}
-                                    <p><strong>Similarity: </strong><span class="text-primary"><b>{{ similarity|floatformat:1 }}</b></span>
-                                    {% else %}
-                                    <p><strong>Similarity: </strong><span class="text-danger"><b>{{ similarity|floatformat:1 }}</b></span>
-                                    {% endif %}
-                                </p>
-                                <a href="{% url 'book_detail' similar_book.id %}" class="btn btn-primary btn-sm">View Details</a>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No similar books found.</p>
-                    {% endif %}
-                </div>
+        <!-- Similar books column -->
+        <div class="col-md-4">
+            <div class="similar-books">
+                <h3 class="text-primary">Recommended Similar Books</h3>
+                {% if similar_books %}
+                    {% for similar_book, similarity in similar_books %}
+                        <div class="similar-book-item">
+                            <h5>{{ similar_book.book_title }}</h5>
+                            <p><strong>Author:</strong> {{ similar_book.author }} <b class="text-warning">[ in {{ similar_book.Publication_Country}} ]</b></p>
+                            {% if similarity >= 0.7 %}
+                                <p><strong>Similarity: </strong><span class="text-success"><b>{{ similarity|floatformat:1 }}</b></span></p>
+                            {% elif similarity >= 0.5 %}
+                                <p><strong>Similarity: </strong><span class="text-primary"><b>{{ similarity|floatformat:1 }}</b></span></p>
+                            {% else %}
+                                <p><strong>Similarity: </strong><span class="text-danger"><b>{{ similarity|floatformat:1 }}</b></span></p>
+                            {% endif %}
+                            <a href="{% url 'book_detail' similar_book.id %}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No similar books found.</p>
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

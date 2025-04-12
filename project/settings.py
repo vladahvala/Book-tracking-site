@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+LOGIN_URL = 'login'  # Це має бути ім'я URL'у для логіну, як у urls.py
+LOGIN_REDIRECT_URL = '/'  # Перенаправлення на головну сторінку після логіну
+
 
 #pip install django-adminlte-ui
 # Application definition

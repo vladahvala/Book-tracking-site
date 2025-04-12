@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .search-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .search-book {
+        height: 48px;
+        padding: 0 15px;
+        font-size: 16px;
+        border: 1px solid #8F87F1;
+        border-radius: 5px 0 0 5px;
+        width: 300px;
+        box-sizing: border-box;
+    }
+
+    .sort-container {
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    a {
+        color: #C68EFD;
+        text-decoration: underline;
+    }
+
+    select, button {
+        height: 48px;
+        padding: 0 15px;
+        font-size: 16px;
+        border: 1px solid #8F87F1;
+        border-radius: 0 5px 5px 0;
+        box-sizing: border-box;
+    }
+
+
+    select {
+        border-right: none;
+        width: 200px;
+        border-radius: 5px 0 0 5px;
+    }
+
+    button {
+        background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
+        color: black!important;
+        cursor: pointer;
+        transition: background-image 0.3s, border 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+
+    button:hover {
+        background-image: linear-gradient(#FED2E2, #E9A5F1 50%, #C68EFD);
+        border: 1px solid #9c5600;
+        color: black;
+        box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2);
+        transform: translateY(2px);
+    }
+</style>
+
+<h1>Book Search</h1>
+
+<form method="get" action="{% url 'search_certain_book' %}">
+    <div class="search-container">
+        <input class="search-book" type="text" name="q" placeholder="Enter book title/author" value="{{ query }}">
+        <button type="submit">Search</button>
+    </div>
+    
+    <div class="sort-container">
+        <select name="sort" id="sort">
+            <option value="book_title" {% if sort_by == 'book_title' %}selected{% endif %}>Book Title</option>
+            <option value="author" {% if sort_by == 'author' %}selected{% endif %}>Author</option>
+        </select>
+        <button type="submit">Sort</button>
+    </div>
+</form>
+
+{% if query %}
+    <h2>Results for "{{ query }}"</h2>
+
+    {% if results %}
+        <ul>
+            {% for book in results %}
+                <li>
+                    <strong><a href="{% url 'book_detail' book.id %}">{{ book.book_title }}</a></strong> — {{ book.author }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нічого не знайдено.</p>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

@@ -14,6 +14,7 @@ class Book(models.Model):
     image = models.ImageField(upload_to='books/images', default='/media/books/images/default.png')
     search_count = models.IntegerField(default=0)
     Category = models.CharField(max_length=100)
+    genre = models.CharField(max_length=250, default="none")
     ISBN = models.CharField(max_length=20)
     Publication_Country = models.CharField(max_length=100)
     Language = models.CharField(max_length=50)
@@ -43,3 +44,11 @@ class UserBook(models.Model):
     def get_status_display(self):
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
         
+class Comment(models.Model):
+    book = models.ForeignKey(Book, related_name="comments", on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    body=models.TextField()
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s-%s' % (self.book.book_title, self.name)

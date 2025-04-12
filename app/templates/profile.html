@@ -39,20 +39,25 @@
             {% endfor %}
         </div>
         <div class="pagination">
+          <!-- Пагінація відображається лише якщо кількість книг на сторінці більше або дорівнює 7 -->
+        {% if user_books_reading.paginator.count >= 7 %}
+        <div class="pagination">
           <!-- Кнопка попередньої сторінки -->
           {% if user_books_reading.has_previous %}
               <a href="?reading_page={{ user_books_reading.previous_page_number }}">«</a>
-         {% endif %}
-      
+          {% endif %}
+
           <!-- Список сторінок -->
           {% for num in user_books_reading.paginator.page_range %}
               <a href="?reading_page={{ num }}" class="{% if user_books_reading.number == num %}active{% endif %}">{{ num }}</a>
           {% endfor %}
-      
+
           <!-- Кнопка наступної сторінки -->
           {% if user_books_reading.has_next %}
               <a href="?reading_page={{ user_books_reading.next_page_number }}">»</a>
           {% endif %}
+        </div>
+        {% endif %}
       </div>
       
     </div>
@@ -117,19 +122,23 @@
             {% endfor %}
         </div>
         <div class="pagination">
-          <!-- Кнопка попередньої сторінки -->
-          {% if user_books_read.has_previous %}
-              <a href="?read_page={{ user_books_read.previous_page_number }}">«</a>
-         {% endif %}
-      
-          <!-- Список сторінок -->
-          {% for num in user_books_read.paginator.page_range %}
-              <a href="?read_page={{ num }}" class="{% if user_books_read.number == num %}active{% endif %}">{{ num }}</a>
-          {% endfor %}
-      
-          <!-- Кнопка наступної сторінки -->
-          {% if user_books_read.has_next %}
-              <a href="?read_page={{ user_books_read.next_page_number }}">»</a>
+          {% if user_books_read.paginator.count >= 7 %}
+          <div class="pagination">
+            <!-- Кнопка попередньої сторінки -->
+            {% if user_books_read.has_previous %}
+                <a href="?read_page={{ user_books_read.previous_page_number }}">«</a>
+            {% endif %}
+  
+            <!-- Список сторінок -->
+            {% for num in user_books_read.paginator.page_range %}
+                <a href="?read_page={{ num }}" class="{% if user_books_read.number == num %}active{% endif %}">{{ num }}</a>
+            {% endfor %}
+  
+            <!-- Кнопка наступної сторінки -->
+            {% if user_books_read.has_next %}
+                <a href="?read_page={{ user_books_read.next_page_number }}">»</a>
+            {% endif %}
+          </div>
           {% endif %}
       </div>
     </div>
@@ -165,18 +174,23 @@
         </div>
         <div class="pagination">
           <!-- Кнопка попередньої сторінки -->
-          {% if user_books_planning.has_previous %}
-              <a href="?planning_page={{ user_books_planning.previous_page_number }}">«</a>
-         {% endif %}
-      
-          <!-- Список сторінок -->
-          {% for num in user_books_planning.paginator.page_range %}
-              <a href="?planning_page={{ num }}" class="{% if user_books_planning.number == num %}active{% endif %}">{{ num }}</a>
-          {% endfor %}
-      
-          <!-- Кнопка наступної сторінки -->
-          {% if user_books_planning.has_next %}
-              <a href="?planning_page={{ user_books_planning.next_page_number }}">»</a>
+          {% if user_books_planning.paginator.count >= 7 %}
+          <div class="pagination">
+            <!-- Кнопка попередньої сторінки -->
+            {% if user_books_planning.has_previous %}
+                <a href="?planning_page={{ user_books_planning.previous_page_number }}">«</a>
+            {% endif %}
+  
+            <!-- Список сторінок -->
+            {% for num in user_books_planning.paginator.page_range %}
+                <a href="?planning_page={{ num }}" class="{% if user_books_planning.number == num %}active{% endif %}">{{ num }}</a>
+            {% endfor %}
+  
+            <!-- Кнопка наступної сторінки -->
+            {% if user_books_planning.has_next %}
+                <a href="?planning_page={{ user_books_planning.next_page_number }}">»</a>
+            {% endif %}
+          </div>
           {% endif %}
       </div>
     </div>
