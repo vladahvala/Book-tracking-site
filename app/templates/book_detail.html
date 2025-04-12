@@ -34,6 +34,45 @@
             border-radius: 5px; /* Rounded corners */
             box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
         }
+
+        .update-status{
+            margin-top: 18px;
+        }
+
+        select {
+            word-wrap: normal;
+            background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
+            background-color: #fae7ee;
+            height: 48px;
+            height: 39px;
+            width: 94px;
+            text-align: center;
+        }
+
+        /* Стиль для всіх кнопок */
+        button,
+        .btn {
+            background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
+            filter: none;
+            border: 1px solid #8F87F1;
+            color: black!important;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-image 0.3s, border 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        /* Стиль для кнопок при наведенні */
+        button:not(.disabled):hover,
+        .btn:not(.disabled):hover {
+            background-image: linear-gradient(#FED2E2, #E9A5F1 50%, #C68EFD);
+            filter: none;
+            border: 1px solid #9c5600;
+            color: black;
+            box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2); /* Увігнута тінь */
+            transform: translateY(2px); /* Ефект натискання */
+        }
+
     </style>
 {% endblock %}
 
@@ -101,21 +140,22 @@
                             </li>
 
                             <li class="list-group-item">
-                                <strong>Current status:</strong> {{ user_book.get_status_display }}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="book" value="{{ book.id }}">  <!-- додаємо ID книги -->
+                                    <strong><label for="status">Status:</label></strong>
+                                    <select name="status">
+                                        <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                                        <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                                        <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                                        <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+                                    </select>
+                                    
+                                    <p><button class="update-status" type="submit">Update Status</button></p>
+                                </form>
                             </li>
 
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="book" value="{{ book.id }}">  <!-- додаємо ID книги -->
-                                <label for="status">Change Status:</label>
-                                <select name="status" id="status">
-                                    <option value="unread" {% if book.status == 'unread' %}selected{% endif %}>Unread</option>
-                                    <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Reading</option>
-                                    <option value="read" {% if book.status == 'read' %}selected{% endif %}>Read</option>
-                                    <option value="planning" {% if book.status == 'planning' %}selected{% endif %}>Planning</option>
-                                </select>
-                                <button type="submit">Update Status</button>
-                            </form>
+                            
                             
                         </ul>
                     </div>

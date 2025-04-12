@@ -12,6 +12,9 @@ import plotly.graph_objs as go
 from .models import Book, UserBook
 from .forms import UserBookForm
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 def search_books(request):
     query = request.GET.get('query', '')
@@ -72,6 +75,8 @@ def book_detail(request, pk):
             # Update the status
             user_book.status = status
             user_book.save()
+
+        
 
         return redirect('book_detail', pk=pk)
 
@@ -140,18 +145,40 @@ def profile(request):
     if not session_key:
         request.session.create()
 
-    # Handling POST request for updating book status
     if request.method == 'POST':
         book_id = request.POST.get('book')
+        action = request.POST.get('action')
         status = request.POST.get('status')
+        rating = request.POST.get('rating')
 
-        if book_id and status:
+        # Обробка форми оновлення статусу та рейтингу
+        if book_id:
             try:
                 book = Book.objects.get(id=book_id)
                 user_book = UserBook.objects.get(session_key=session_key, book=book)
-                user_book.status = status
-                user_book.save()
+
+                # Оновлення статусу
+                if action == 'update_status' and status:
+                    if status == 'unread':
+                        user_book.delete()
+                        return redirect('profile')
+                    else:
+                        user_book.status = status
+                        user_book.save()
+
+                # Оновлення рейтингу
+                elif action == 'update_rating' and rating:
+                    user_book.rating = int(rating)
+                    user_book.save()
+
+                # Оновлення відгуку
+                elif action == 'update_review' and book_id:
+                    review = request.POST.get('review')
+                    user_book.review = review
+                    user_book.save()
+
                 return redirect('profile')
+
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
@@ -182,6 +209,8 @@ def profile(request):
         'user_books_planning': user_books_planning,
         'form': form,
     })
+
+
 def book_status(request, pk):
     book = get_object_or_404(Book, pk=pk)
 
@@ -195,12 +224,17 @@ def book_status(request, pk):
 
     if request.method == 'POST':
         form = UserBookForm(request.POST, instance=user_book)
+        rating = request.POST.get('rating')
+
         if form.is_valid():
             if form.cleaned_data['status'] == 'unread':
-                user_book.delete()  # якщо статус "непрочитано" — видаляємо
+                user_book.delete()
             else:
-                form.save()  # оновлюємо статус
-            return redirect('profile')  # перенаправляємо до профілю
+                form.save()
+                if rating:
+                    user_book.rating = int(rating)
+                    user_book.save()
+            return redirect('profile')
     else:
         form = UserBookForm(instance=user_book)
 

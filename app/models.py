@@ -34,9 +34,12 @@ class UserBook(models.Model):
     session_key = models.CharField(max_length=40, null=True, blank=True)  # For anonymous users
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
+    rating = models.IntegerField(null=True, blank=True)  # 👈 обов’язково
+    review = RichTextField(default="No review yet")
 
     def __str__(self):
         return f"{self.book.title} - {self.status}"
 
     def get_status_display(self):
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
+        

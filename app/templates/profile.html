@@ -6,25 +6,33 @@
   <div class="tabs">
     <ul class="tab-list">
       <li><a href="#reading" class="tab-link active">Reading</a></li>
-      <li><a href="#read" class="tab-link">Read</a></li>
+      <li><a href="#read" class="tab-link read-tab">Read</a></li>
       <li><a href="#planning" class="tab-link">Planning</a></li>
     </ul>
 
     <!-- Reading Tab -->
     <div id="reading" class="tab-content active-tab">
         <h2>Reading</h2>
-        <div class="book-list">
+        <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
             {% for user_book in user_books_reading %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>
                     <p><strong>{{ user_book.book.author }}</strong></p>
                     <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <input type="hidden" name="book" value="{{ user_book.book.id }}">
-                        <button class="submin-btn" type="submit">Update Status</button>
-                    </form>
+                      {% csrf_token %}
+                      <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                      
+                      <select name="status">
+                        <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                        <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                        <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                        <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+                      </select>
+                  
+                      <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
+                  </form>
+                  
                 </div>
             {% empty %}
                 <p>No books in this category.</p>
@@ -52,17 +60,56 @@
     <!-- Read Tab -->
     <div id="read" class="tab-content">
         <h2>Read</h2>
-        <div class="book-list">
+        <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
             {% for user_book in user_books_read %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>
                     <p><strong>{{ user_book.book.author }}</strong></p>
                     <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <input type="hidden" name="book" value="{{ user_book.book.id }}">
-                        <button class="submin-btn" type="submit">Update Status</button>
+                      {% csrf_token %}
+                      <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                    
+                      <!-- Статус -->
+                      <select name="status">
+                        <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                        <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                        <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                        <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+                      </select>
+                    
+                      <button type="submit" class="update-status" name="action" value="update_status">Update Status</button>
+                    
+                      <!-- ⭐⭐⭐⭐⭐ Rating -->
+                      <div class="star-rating">
+                        {% for i in "54321" %}
+                          {% with i|add:0 as star %}
+                            <input type="radio"
+                                   id="star{{ star }}-{{ user_book.book.id }}"
+                                   name="rating"
+                                   value="{{ star }}"
+                                   {% if user_book.rating == star %}checked{% endif %}>
+                            <label for="star{{ star }}-{{ user_book.book.id }}">&#9733;</label>
+                          {% endwith %}
+                        {% endfor %}
+                      </div>
+                    
+                      <button type="submit" class="update-rating" name="action" value="update_rating">Update Rating</button>
+                    
+                      
+                      <!-- Кнопка для показу форми відгуку -->
+                      <button type="button" class="review-btn" data-book-id="{{ user_book.book.id }}" onclick="toggleReviewForm({{ user_book.book.id }})">Review</button>
+
+                      <!-- Форма для відгуку (спочатку прихована) -->
+                      <div class="review-form" id="review-form-{{ user_book.book.id }}" style="display: none;">
+                          <form method="POST" action="{% url 'profile' %}">
+                              {% csrf_token %}
+                              <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                              <textarea name="review" rows="4" cols="50">{{ user_book.review }}</textarea>
+                              <button type="submit" class="save-review-btn"  name="action" value="update_review">Save Review</button>
+                          </form>
+                      </div>
+
                     </form>
                 </div>
             {% empty %}
@@ -90,18 +137,27 @@
     <!-- Planning Tab -->
     <div id="planning" class="tab-content">
         <h2>Planning</h2>
-        <div class="book-list">
+        <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
             {% for user_book in user_books_planning %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>
                     <p><strong>{{ user_book.book.author }}</strong></p>
                     <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <input type="hidden" name="book" value="{{ user_book.book.id }}">
-                        <button class="submin-btn" type="submit">Update Status</button>
+                      {% csrf_token %}
+                      <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                  
+                      <select name="status">
+                        <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                        <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                        <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                        <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+                      </select>
+                  
+                      <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
+                
                     </form>
+                  
                 </div>
             {% empty %}
                 <p>No books in this category.</p>
@@ -127,6 +183,37 @@
   </div>
   <style>
 /* Загальний стиль для вкладок */
+
+.review-btn{
+  margin-top: 12px;
+  width: 170px;
+}
+
+.save-review-btn{
+  width: 170px;
+}
+/* Style for the review textarea */
+textarea[name="review"] {
+    width: 100%;  /* Make the textarea expand to fit the container */
+    padding: 10px;  /* Add padding inside the textarea */
+    border: 1px solid #ccc;  /* Light border for the textarea */
+    border-radius: 4px;  /* Rounded corners */
+    font-size: 14px;  /* Slightly smaller font size for comfort */
+    line-height: 1.6;  /* Increased line height for readability */
+    resize: vertical;  /* Allow vertical resizing */
+    box-sizing: border-box;  /* Ensure padding is included in width/height */
+    margin-top: 12px;
+    margin-bottom: 12px;
+    height: 150px;
+}
+
+textarea[name="review"]:focus {
+    border-color: #4A90E2;  /* Change border color when focused */
+    outline: none;  /* Remove the default outline */
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);  /* Light blue shadow on focus */
+}
+
+
 .tabs {
   display: flex;
   flex-direction: column;
@@ -136,10 +223,22 @@
   list-style: none;
   display: flex;
   padding: 0;
-  margin: 0;
+  margin: 0;  
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.update-rating{
+  margin-left: 21px;
+}
+
+.update-status{
+  margin-left: 48px;
 }
 
 .tab-list li {
+  width: 170px;
+  text-align: center;
   margin-right: 10px;
   padding: 10px;
   background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
@@ -157,9 +256,12 @@
 select {
     word-wrap: normal;
     background-image: linear-gradient(#C68EFD, #E9A5F1 50%, #FED2E2);
-    background-color:  #fae7ee;
+    background-color: #fae7ee;
+    height: 48px;
+    width: 94px;
+    margin-left: 32px;
+    text-align: center;
 }
-
 .tab-list .active {
   background-image: linear-gradient(#FED2E2, #E9A5F1 50%, #C68EFD);
   border: 1px solid #9c5600;
@@ -212,7 +314,7 @@ button:not(.disabled):hover {
 
 /* Стиль для карток книг */
 .book-card {
-  width: calc(33.33% - 20px);
+  width: calc(100% - 20px);
   text-align: center;
   border: 1px solid #ddd;
   padding: 20px;
@@ -250,7 +352,8 @@ p {
 }
 
 .book-list {
-    display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* За замовчуванням — 3 колонки */
     flex-wrap: wrap;
     gap: 20px;
     margin-top: 25px;
@@ -314,6 +417,128 @@ form button:hover {
 }
 
 
+.star-rating {
+  direction: rtl;
+  display: inline-flex;
+}
+
+.star-rating input[type="radio"] {
+  display: none;
+}
+
+.star-rating label {
+  font-size: 2em;
+  color: lightgray;
+  cursor: pointer;
+}
+
+.star-rating input[type="radio"]:checked ~ label {
+  color: gold;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: gold;
+}
+
+
+
+
+/* Стиль для планшетів */
+@media (max-width: 768px) {
+    /* На планшетах та менших екранах: два стовпці */
+    .book-list {
+        grid-template-columns: repeat(2, 1fr); /* Для планшетів дві колонки */
+    }
+
+    .star-rating{
+      margin-top: 12px;
+    }
+
+    .pagination {
+        text-align: center;
+    }
+
+    .tab-list {
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .tabs {
+        padding: 0 10px;
+    }
+
+    select {
+        margin-left: 0px;
+        justify-self: center;
+    }
+
+    .update-status,
+    .update-rating {
+        width: 170px;
+        margin-left: 0px;
+        margin-top: 13px;
+        justify-self: center;
+    }
+    button {
+        padding: 10px;
+    }
+    
+    .book-card img {
+        max-width: 90%; /* Картинки в планшетному вигляді мають бути трішки меншими */
+    }
+  }
+
+/* Стиль для телефонів */
+@media (max-width: 480px) {
+    /* На телефонах: одна колонка */
+    .book-list {
+        grid-template-columns: 1fr; /* Для телефонів одна колонка */
+    }
+
+    .pagination {
+        font-size: 14px;
+    }
+
+    .review-btn, 
+    .review-btn  {
+    margin-left: 13px;
+}
+
+    .tab-list {
+    flex-direction: column; /* Вкладки вирівнюються вертикально на маленьких екранах */
+    align-items: center;
+   text-align: center;
+  }
+
+  .tab-list li {
+    margin-bottom: 13px; /* Додаємо відступ між вкладками */
+    margin-top: 13px; /* Додаємо відступ між вкладками */
+    width: 100%;
+  }
+
+  .tab-list li:first-child {
+    margin-top: 0; /* Вилучаємо верхній відступ для першої вкладки */
+  }
+
+  .tab-list li:last-child {
+    margin-bottom: 0; /* Вилучаємо нижній відступ для останньої вкладки */
+  }
+
+    button {
+        padding: 12px;
+    }
+    
+    .book-card img {
+        max-width: 100%; /* Картинки займають всю ширину на телефоні */
+    }
+
+    .update-status,
+    .update-rating {
+        margin-left: 13px;
+    }
+
+}
   </style>
 <script>
   // Відновлюємо вибрану вкладку з localStorage
@@ -362,7 +587,18 @@ form button:hover {
     });
   });
 
-  
+
+  function toggleReviewForm(bookId) {
+    const reviewForm = document.getElementById('review-form-' + bookId);
+    if (reviewForm.style.display === 'none') {
+        reviewForm.style.display = 'block';
+    } else {
+        reviewForm.style.display = 'none';
+    }
+}
+
 </script>
+
+
 
 {% endblock %}
