@@ -20,6 +20,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import CreateView
+from abc import ABC, abstractmethod
+from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+import fitz
+import os
+import plotly.graph_objs as go
+from .models import Book, UserBook
+from .forms import UserBookForm
+from .observer import BookStatistics, BookRecommendations
 
 def loginUser(request):
     page = 'login'
@@ -71,8 +82,43 @@ class AddCommentView(CreateView):
 
 
 
+
+# ==== PATTERN STRATEGY ====
+
+class BookSortStrategy(ABC):
+    @abstractmethod
+    def sort(self, query_set):
+        pass
+
+class SortByTitle(BookSortStrategy):
+    def sort(self, query_set):
+        return query_set.order_by('book_title')
+
+class SortByRating(BookSortStrategy):
+    def sort(self, query_set):
+        return query_set.order_by('-rating')
+
+class SortByAuthor(BookSortStrategy):
+    def sort(self, query_set):
+        return query_set.order_by('author')
+    
+
+# ==== PATTERN FACTORY ====
+
+class SortStrategyFactory:
+    @staticmethod
+    def create_strategy(sort_by: str) -> BookSortStrategy:
+        if sort_by == 'rating':
+            return SortByRating()
+        elif sort_by == 'author':
+            return SortByAuthor()
+        else:
+            return SortByTitle()
+
+
+# ==== VIEWS ====
+
 def genres(request):
-    # Структура категорій і підкатегорій
     categories = {
         'Business Literature': ['Business Literature', 'Career & HR', 'Marketing & PR', 'Finance', 'Economics'],
         'Detectives & Thrillers': ['Action', 'Detectives', 'Humorous & Women,\'s Detectives', 'Historical Detective', 
@@ -96,31 +142,31 @@ def genres(request):
                                  'Phantasmagoria, absurdist prose', 'Epistolary prose'],                        
         'Science Fiction and Fantasy': ['Heroic fantasy', 'Cyberpunk', 'Mythological fantasy', 
                                  'Post-apocalypse', 'Slavic fantasy', 'Horror', 'Steampunk', 
-                                 'Fantasy', 'Epic science fiction', 'Modern fairy tale'],    \
+                                 'Fantasy', 'Epic science fiction', 'Modern fairy tale'],    
         'Humor': ['Jokes', 'Satire', 'Humor'], 
     }
 
-    # Структура книг за підкатегоріями
     books_by_subcategory = []
     for subcategory in Book.objects.values_list('genre', flat=True).distinct():
         books = list(Book.objects.filter(genre=subcategory).values('id', 'book_title', 'author'))
         books_by_subcategory.append((subcategory, books))
 
     return render(request, 'genres.html', {
-    'categories': categories,
-    'books_by_subcategory': books_by_subcategory,
-})
+        'categories': categories,
+        'books_by_subcategory': books_by_subcategory,
+    })
 
 def search_certain_book(request):
     query = request.GET.get('q')
-    sort_by = request.GET.get('sort', 'book_title')  # За замовчуванням сортуємо за назвою книги
+    sort_by = request.GET.get('sort', 'book_title')
     results = []
 
     if query:
-        results = Book.objects.filter(
-            Q(book_title__icontains=query) |
-            Q(author__icontains=query)
-        ).order_by(sort_by)  # Сортуємо за вибраним полем
+        queryset = Book.objects.filter(
+            Q(book_title__icontains=query) | Q(author__icontains=query)
+        )
+        sort_strategy = SortStrategyFactory.create_strategy(sort_by)
+        results = sort_strategy.sort(queryset)
 
     return render(request, 'search_results.html', {
         'query': query,
@@ -128,106 +174,70 @@ def search_certain_book(request):
         'sort_by': sort_by,
     })
 
+
 def search_books(request):
     query = request.GET.get('query', '')
-    similar_books = []
-
-    # Find similar books
     similar_books = find_similar_books(query, Book.objects.all())
 
-    context = {
+    return render(request, 'recommendations.html', {
         'query': query,
         'similar_books': similar_books,
-    }
-    return render(request, 'recommendations.html', context, )
-
+    })
 
 def extract_pdf_details(pdf_path):
     document = fitz.open(pdf_path)
     num_pages = document.page_count
-    file_size = os.path.getsize(pdf_path)  # in bytes
-    file_size_mb = file_size / (1024 * 1024)  # in MB
-    return num_pages, file_size_mb
-
+    file_size = os.path.getsize(pdf_path) / (1024 * 1024)
+    return num_pages, file_size
 
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
-# Перевірка на наявність session_key
+
     session_key = request.session.session_key
     if not session_key:
-        request.session.create()  # Створюємо сесію, якщо вона відсутня
+        request.session.create()
 
-    # Тепер отримуємо або створюємо запис UserBook
-    user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
-    
-    # Find similar books
-    all_books = Book.objects.exclude(pk=pk)  # Exclude the current book from recommendations
+    user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
+
+    all_books = Book.objects.exclude(pk=pk)
     similar_books = find_similar_books(book.book_title, all_books)
-     
-    # Extract PDF details
-    pdf_path = book.file.path
-    num_pages, file_size_mb = extract_pdf_details(pdf_path)
-    
-    # Handle POST request for updating book status
+    num_pages, file_size = extract_pdf_details(book.file.path)
+
     if request.method == 'POST':
         status = request.POST.get('status')
+        if not request.session.session_key:
+            request.session.create()
 
-        # Use session for anonymous users, or 'user' for logged-in users
-        session_key = request.session.session_key
-        if not session_key:
-            request.session.create()  # Create a session if not exists
-        
-        # Use session_key instead of user model for anonymous users
-        user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
+        user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
 
         if status == 'unread':
-            # Remove book from the user's profile
             user_book.delete()
         else:
-            # Update the status
             user_book.status = status
             user_book.save()
 
-        
-
         return redirect('book_detail', pk=pk)
 
-    context = {
+    return render(request, 'book_detail.html', {
         'book': book,
         'similar_books': similar_books,
         'num_pages': num_pages,
-        'file_size_mb': file_size_mb,
-        'user_book': user_book,  # Передаємо user_book у контекст
-    }
-    return render(request, 'book_detail.html', context)
-
-
-
+        'file_size_mb': file_size,
+        'user_book': user_book,
+    })
 
 def book_stats(request):
-    # Query to get data
     data = Book.objects.values('Publication_Year', 'Category').annotate(count=Count('id'))
-
-    # Extract unique categories and years for plotting
     categories = sorted(set(item['Category'] for item in data))
     years = sorted(set(item['Publication_Year'] for item in data))
 
-    # Create empty dictionary to store counts by year for each category
-    category_counts_by_year = {category: [0] * len(years) for category in categories}
-
-    # Fill the dictionary with counts from the query
+    category_counts_by_year = {cat: [0] * len(years) for cat in categories}
     for item in data:
         category_counts_by_year[item['Category']][years.index(item['Publication_Year'])] = item['count']
 
-    # Plotly figure creation
     fig = go.Figure()
-
-    for category in categories:
-        fig.add_trace(go.Bar(
-            x=years,
-            y=category_counts_by_year[category],
-            name=category
-        ))
+    for cat in categories:
+        fig.add_trace(go.Bar(x=years, y=category_counts_by_year[cat], name=cat))
 
     fig.update_layout(
         barmode='stack',
@@ -238,20 +248,15 @@ def book_stats(request):
     )
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='gray')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='gray')
-    # Convert the figure to HTML
-    fig_html = fig.to_html(full_html=False)
 
-    context = {
-        'fig_html': fig_html
-    }
-
-    return render(request, 'trend.html', context)
-
+    return render(request, 'trend.html', {
+        'fig_html': fig.to_html(full_html=False),
+    })
 
 def about(request):
-    return render(request, 'about.html', )
+    return render(request, 'about.html')
 
-@login_required(login_url='login') 
+@login_required(login_url='login')
 def profile(request):
     session_key = request.session.session_key
     if not session_key:
@@ -263,13 +268,11 @@ def profile(request):
         status = request.POST.get('status')
         rating = request.POST.get('rating')
 
-        # Обробка форми оновлення статусу та рейтингу
         if book_id:
             try:
                 book = Book.objects.get(id=book_id)
                 user_book = UserBook.objects.get(session_key=session_key, book=book)
 
-                # Оновлення статусу
                 if action == 'update_status' and status:
                     if status == 'unread':
                         user_book.delete()
@@ -277,29 +280,22 @@ def profile(request):
                     else:
                         user_book.status = status
                         user_book.save()
-
-                # Оновлення рейтингу
                 elif action == 'update_rating' and rating:
                     user_book.rating = int(rating)
                     user_book.save()
-
-                # Оновлення відгуку
-                elif action == 'update_review' and book_id:
+                elif action == 'update_review':
                     review = request.POST.get('review')
                     user_book.review = review
                     user_book.save()
 
                 return redirect('profile')
-
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
-    # Getting page parameters from GET request
     reading_page = request.GET.get('reading_page', 1)
     read_page = request.GET.get('read_page', 1)
     planning_page = request.GET.get('planning_page', 1)
 
-    # Fetching books and creating paginators for each category
     reading_books = UserBook.objects.filter(status='reading', session_key=session_key)
     read_books = UserBook.objects.filter(status='read', session_key=session_key)
     planning_books = UserBook.objects.filter(status='planning', session_key=session_key)
@@ -308,31 +304,28 @@ def profile(request):
     read_paginator = Paginator(read_books, 6)
     planning_paginator = Paginator(planning_books, 6)
 
-    # Getting the necessary pages
-    user_books_reading = reading_paginator.get_page(reading_page)
-    user_books_read = read_paginator.get_page(read_page)
-    user_books_planning = planning_paginator.get_page(planning_page)
-
-    form = UserBookForm()
-
     return render(request, 'profile.html', {
-        'user_books_reading': user_books_reading,
-        'user_books_read': user_books_read,
-        'user_books_planning': user_books_planning,
-        'form': form,
+        'user_books_reading': reading_paginator.get_page(reading_page),
+        'user_books_read': read_paginator.get_page(read_page),
+        'user_books_planning': planning_paginator.get_page(planning_page),
+        'form': UserBookForm(),
     })
 
-@login_required(login_url='login') 
+@login_required(login_url='login')
 def book_status(request, pk):
     book = get_object_or_404(Book, pk=pk)
-
-    # шукаємо, чи вже є запис UserBook
     session_key = request.session.session_key
     if not session_key:
-        request.session.create()  # Створюємо сесію, якщо вона відсутня
+        request.session.create()
 
-    # Тепер отримуємо або створюємо запис UserBook
-    user_book, created = UserBook.objects.get_or_create(session_key=session_key, book=book)
+    user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
+
+    # Додаємо спостерігачів до UserBook
+    statistics_observer = BookStatistics()
+    recommendations_observer = BookRecommendations()
+    user_book.add_observer(statistics_observer)
+    user_book.add_observer(recommendations_observer)
+
 
     if request.method == 'POST':
         form = UserBookForm(request.POST, instance=user_book)

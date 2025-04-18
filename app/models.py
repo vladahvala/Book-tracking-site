@@ -20,9 +20,11 @@ class Book(models.Model):
     Language = models.CharField(max_length=50)
     Publication_Year = models.IntegerField()
 
+
     def __str__(self):
         return self.book_title
 
+# Клас UserBook з додаванням Observer
 class UserBook(models.Model):
     STATUS_CHOICES = [
         ('unread', 'Unread'),
@@ -32,14 +34,34 @@ class UserBook(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, null=True, blank=True)  # For anonymous users
+    session_key = models.CharField(max_length=40, null=True, blank=True)  # Для анонімних користувачів
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
     rating = models.IntegerField(null=True, blank=True)  # 👈 обов’язково
     review = RichTextField(default="No review yet")
 
+    observers = []
+
     def __str__(self):
-        return f"{self.book.title} - {self.status}"
+        return f"{self.book.book_title} - {self.status}"
+
+    def add_observer(self, observer):
+        if observer not in self.observers:
+            self.observers.append(observer)
+
+    def remove_observer(self, observer):
+        if observer in self.observers:
+            self.observers.remove(observer)
+
+    def notify_observers(self):
+        for observer in self.observers:
+            observer.update(self.book)
+
+    def save(self, *args, **kwargs):
+        # Збереження до бази даних
+        super().save(*args, **kwargs)
+        # Оновлюємо статус книги і сповіщаємо спостерігачів
+        self.notify_observers()
 
     def get_status_display(self):
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
