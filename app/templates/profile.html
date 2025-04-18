@@ -14,7 +14,7 @@
     <div id="reading" class="tab-content active-tab">
         <h2>Reading</h2>
         <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {% for user_book in user_books_reading %}
+            {% for user_book in reading_books  %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>
@@ -66,7 +66,7 @@
     <div id="read" class="tab-content">
         <h2>Read</h2>
         <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {% for user_book in user_books_read %}
+            {% for user_book in read_books   %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>
@@ -147,7 +147,7 @@
     <div id="planning" class="tab-content">
         <h2>Planning</h2>
         <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {% for user_book in user_books_planning %}
+            {% for user_book in planning_books  %}
                 <div class="book-card">
                     <img src="{{ user_book.book.image.url }}" alt="Book Cover">
                     <p><strong>{{ user_book.book.book_title }}</strong></p>

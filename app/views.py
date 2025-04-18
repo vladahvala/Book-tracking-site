@@ -35,7 +35,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from .handlers import LoginHandler, RegisterHandler
-
+from .commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
 
 
 # ==== PATTERN DECORATOR ====
@@ -259,11 +259,14 @@ def profile(request):
     if not session_key:
         request.session.create()
 
+    invoker = CommandInvoker()
+
     if request.method == 'POST':
         book_id = request.POST.get('book')
         action = request.POST.get('action')
         status = request.POST.get('status')
         rating = request.POST.get('rating')
+        review = request.POST.get('review')
 
         if book_id:
             try:
@@ -271,42 +274,33 @@ def profile(request):
                 user_book = UserBook.objects.get(session_key=session_key, book=book)
 
                 if action == 'update_status' and status:
-                    if status == 'unread':
-                        user_book.delete()
-                        return redirect('profile')
-                    else:
-                        user_book.status = status
-                        user_book.save()
+                    invoker.add_command(UpdateStatusCommand(user_book, status))
                 elif action == 'update_rating' and rating:
-                    user_book.rating = int(rating)
-                    user_book.save()
-                elif action == 'update_review':
-                    review = request.POST.get('review')
-                    user_book.review = review
-                    user_book.save()
+                    invoker.add_command(UpdateRatingCommand(user_book, rating))
+                elif action == 'update_review' and review:
+                    invoker.add_command(UpdateReviewCommand(user_book, review))
+
+                invoker.execute_commands()
 
                 return redirect('profile')
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
-    reading_page = request.GET.get('reading_page', 1)
-    read_page = request.GET.get('read_page', 1)
-    planning_page = request.GET.get('planning_page', 1)
+    # Get books for the user
+    user_books = UserBook.objects.filter(session_key=session_key)
 
-    reading_books = UserBook.objects.filter(status='reading', session_key=session_key)
-    read_books = UserBook.objects.filter(status='read', session_key=session_key)
-    planning_books = UserBook.objects.filter(status='planning', session_key=session_key)
-
-    reading_paginator = Paginator(reading_books, 6)
-    read_paginator = Paginator(read_books, 6)
-    planning_paginator = Paginator(planning_books, 6)
+    # You can filter by status if needed, for example:
+    reading_books = user_books.filter(status='reading')
+    read_books = user_books.filter(status='read')
+    planning_books = user_books.filter(status='planning')
 
     return render(request, 'profile.html', {
-        'user_books_reading': reading_paginator.get_page(reading_page),
-        'user_books_read': read_paginator.get_page(read_page),
-        'user_books_planning': planning_paginator.get_page(planning_page),
         'form': UserBookForm(),
+        'reading_books': reading_books,
+        'read_books': read_books,
+        'planning_books': planning_books,
     })
+
 
 @login_required_custom(login_url='login')
 def book_status(request, pk):
