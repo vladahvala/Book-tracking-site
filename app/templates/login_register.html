@@ -71,6 +71,14 @@
                 <p>Already have an account? <a href="{% url 'login' %}" id="register_text">Login</a></p>
             </form>
             {% endif %}
+            {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
         </div>
     </div>
 </body>

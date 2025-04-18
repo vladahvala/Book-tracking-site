@@ -30,46 +30,43 @@ import os
 import plotly.graph_objs as go
 from .models import Book, UserBook
 from .forms import UserBookForm
-from .observer import BookStatistics, BookRecommendations
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+from .handlers import LoginHandler, RegisterHandler
 
-def loginUser(request):
-    page = 'login'
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
 
-        user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            return redirect('profile')
+# ==== PATTERN DECORATOR ====
 
-    return render(request, 'login_register.html', {'page':page})
+def login_required_custom(function=None, redirect_field_name='next', login_url='login'):
+    """
+    Декоратор, який перевіряє, чи користувач автентифікований.
+    Якщо ні, перенаправляє його на сторінку логіну.
+    """
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated,
+        login_url=login_url
+    )
+    
+    if function:
+        return actual_decorator(function)
+    
+    return actual_decorator
+
 
 def logoutUser(request):
     logout(request)
     return redirect('login')
 
+def loginUser(request):
+    handler = LoginHandler()
+    return handler.handle(request)
+
 def registerUser(request):
-    page = 'register'
-    form = CustomUserCreationForm()
-
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password1'])  # встановлення пароля
-            user.save()  # збереження користувача в базу даних
-
-            # Тепер ми можемо аутентифікувати користувача з новим паролем
-            user = authenticate(request, username=user.username, password=request.POST['password1'])
-            
-            if user is not None:
-                login(request, user)  # авторизація користувача
-                return redirect('main')  # перенаправлення на головну сторінку
-
-    context = {'form': form, 'page': page}
-    return render(request, 'login_register.html', context)
+    handler = RegisterHandler()
+    return handler.handle(request)
 
 def logoutUser(request):
     logout(request)
@@ -256,7 +253,7 @@ def book_stats(request):
 def about(request):
     return render(request, 'about.html')
 
-@login_required(login_url='login')
+@login_required_custom(login_url='login')
 def profile(request):
     session_key = request.session.session_key
     if not session_key:
@@ -311,7 +308,7 @@ def profile(request):
         'form': UserBookForm(),
     })
 
-@login_required(login_url='login')
+@login_required_custom(login_url='login')
 def book_status(request, pk):
     book = get_object_or_404(Book, pk=pk)
     session_key = request.session.session_key
@@ -319,13 +316,6 @@ def book_status(request, pk):
         request.session.create()
 
     user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
-
-    # Додаємо спостерігачів до UserBook
-    statistics_observer = BookStatistics()
-    recommendations_observer = BookRecommendations()
-    user_book.add_observer(statistics_observer)
-    user_book.add_observer(recommendations_observer)
-
 
     if request.method == 'POST':
         form = UserBookForm(request.POST, instance=user_book)
