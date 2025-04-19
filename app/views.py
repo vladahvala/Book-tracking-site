@@ -22,6 +22,12 @@ from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateR
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 from .patterns.states import UnreadState, ReadingState, ReadState
 from .patterns.services import BookDetailBuilder
+from .patterns.abstract_factories import (
+    BusinessLiteratureFactory, DetectivesAndThrillersFactory, NonfictionLiteratureFactory,
+    HomeAndFamilyFactory, ArtAndDesignFactory, ComputersAndInternetFactory, 
+    ChildrensLiteratureFactory, RomanceNovelsFactory, ScienceAndEducationFactory,
+    PoetryFactory, AdventureFactory, ProseFactory, SciFiAndFantasyFactory, HumorFactory
+)
 
 # ==== PATTERN DECORATOR ====
 
@@ -67,43 +73,41 @@ class AddCommentView(CreateView):
 # ==== VIEWS ====
 
 def genres(request):
-    categories = {
-        'Business Literature': ['Business Literature', 'Career & HR', 'Marketing & PR', 'Finance', 'Economics'],
-        'Detectives & Thrillers': ['Action', 'Detectives', 'Humorous & Women,\'s Detectives', 'Historical Detective', 
-                                   'Classic Detective', 'Crime Detective', 'Hard-Boiled Detective', 'Political Detective', 
-                                   'Police Detective', 'Maniac Stories', 'Soviet Detective', 'Thriller', 'Espionage Detective'],
-        'Nonfiction Literature': ['Biographies & Memoirs', 'Military Documentary & Analysis', 'Military Science', 'Geography & Travel Notes', 'General Nonfiction', 'Journalism & Publicism'],
-        'Home & Family': ['Cars & Traffic Rules', 'Martial Arts & Sports', 'Pets', 'Home Economics', 'Health', 'Cooking', 'Entertainment'],                           
-        'Art, Art Studies & Design': ['Painting, Albums, Illustrated Catalogs', 'Art & Design', 'Art Criticism', 'Cinema & Film', 'Music', 'Theatre', 'Sculpture & Architecture'],
-        'Computers & Internet': ['Foreign Computer Literature', 'Computer Hardware & Digital Signal Processing', 'Operating Systems, Networks & Internet', 
-                                 'Programming, Software & Databases', 'Computer Tutorials & Guides'],
-        'Children’s Literature': ['General Children\'s Literature', 'Educational Literature for Children', 'Thrilling Literature for Children', 
-                                 'Games & Exercises for Children', 'World Folk Tales'],
-        'Romance Novels': ['Historical Romance', 'Short Romance Stories', 'Romantic Fantasy', 
-                                 'Romantic Thrillers', 'Contemporary Romance'],
-        'Science & Education': ['Alternative Medicine', 'Alternative Sciences & Theories', 'Biology, Biophysics & Biochemistry', 
-                                 'Military History', 'Law & Government'],
-        'Poetry': ['Classical foreign poetry', 'Song lyrics poetry', 'Modern foreign poetry'],        
-        'Adventure': ['Adventure novel', 'Adventures', 'Modern world adventures', 
-                                 'Nature and animals', 'Maritime adventures'],
-        'Prose': ['Gothic novel', 'Classical prose of the 19th century', 'War prose', 
-                                 'Phantasmagoria, absurdist prose', 'Epistolary prose'],                        
-        'Science Fiction and Fantasy': ['Heroic fantasy', 'Cyberpunk', 'Mythological fantasy', 
-                                 'Post-apocalypse', 'Slavic fantasy', 'Horror', 'Steampunk', 
-                                 'Fantasy', 'Epic science fiction', 'Modern fairy tale'],    
-        'Humor': ['Jokes', 'Satire', 'Humor'], 
-    }
-
+    # Створення фабрик для категорій
+    factories = [
+        BusinessLiteratureFactory(),
+        DetectivesAndThrillersFactory(),
+        NonfictionLiteratureFactory(),
+        HomeAndFamilyFactory(),
+        ArtAndDesignFactory(),
+        ComputersAndInternetFactory(),
+        ChildrensLiteratureFactory(),
+        RomanceNovelsFactory(),
+        ScienceAndEducationFactory(),
+        PoetryFactory(),
+        AdventureFactory(),
+        ProseFactory(),
+        SciFiAndFantasyFactory(),
+        HumorFactory()
+    ]
+    
+    categories = {}
     books_by_subcategory = []
-    for subcategory in Book.objects.values_list('genre', flat=True).distinct():
-        books = list(Book.objects.filter(genre=subcategory).values('id', 'book_title', 'author'))
-        books_by_subcategory.append((subcategory, books))
+
+    # Використовуємо фабрики для отримання категорій та книжок
+    for factory in factories:
+        category_names = factory.create_categories()
+        categories.update({category_names[0]: category_names})  # додаємо перше значення як ключ
+        
+        # Отримуємо книжки для кожної підкатегорії
+        books = list(factory.create_books_by_subcategory())
+        for category in category_names:
+            books_by_subcategory.append((category, books))
 
     return render(request, 'genres.html', {
         'categories': categories,
         'books_by_subcategory': books_by_subcategory,
     })
-
 
 
 def search_certain_book(request):
