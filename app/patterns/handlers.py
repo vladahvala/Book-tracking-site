@@ -1,8 +1,8 @@
-# handlers.py
+# ==== PATTERN TEMPLATE METHOD ====
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from .forms import CustomUserCreationForm  # якщо є
+from ..forms import CustomUserCreationForm  # якщо є
 # або імпортуєш з іншого місця, де вона у тебе визначена
 
 class BaseAuthHandler:

@@ -1,4 +1,5 @@
-# commands.py
+# ==== PATTERN COMMAND ====
+
 class Command:
     def execute(self):
         raise NotImplementedError("Subclasses must implement the execute method")

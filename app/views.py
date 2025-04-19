@@ -1,42 +1,27 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import F
-from .models import Book
 from .utils import find_similar_books
-from django.shortcuts import render, get_object_or_404
-from .models import Book, Comment
-from .utils import find_similar_books
+from .models import Book, UserBook, Comment
+from .forms import UserBookForm, CustomUserCreationForm
+
 import os
 import fitz  # PyMuPDF
 from django.db.models import Count
 import plotly.graph_objs as go
-from .models import Book, UserBook
-from .forms import UserBookForm, CustomUserCreationForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from django.db.models import Q
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
-from django.views.generic.edit import CreateView
-from abc import ABC, abstractmethod
-from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, Count
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-import fitz
-import os
-import plotly.graph_objs as go
-from .models import Book, UserBook
-from .forms import UserBookForm
+from django.views.generic.edit import CreateView
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
-from .handlers import LoginHandler, RegisterHandler
-from .commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
 
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from .patterns.factories import SortStrategyFactory
+from .patterns.handlers import LoginHandler, RegisterHandler
+from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
+from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 
 # ==== PATTERN DECORATOR ====
 
@@ -56,6 +41,7 @@ def login_required_custom(function=None, redirect_field_name='next', login_url='
     return actual_decorator
 
 
+# login/register/logout
 def logoutUser(request):
     logout(request)
     return redirect('login')
@@ -76,41 +62,6 @@ class AddCommentView(CreateView):
     model = Comment
     template_name='add_comment.html'
     fields='__all__'
-
-
-
-
-# ==== PATTERN STRATEGY ====
-
-class BookSortStrategy(ABC):
-    @abstractmethod
-    def sort(self, query_set):
-        pass
-
-class SortByTitle(BookSortStrategy):
-    def sort(self, query_set):
-        return query_set.order_by('book_title')
-
-class SortByRating(BookSortStrategy):
-    def sort(self, query_set):
-        return query_set.order_by('-rating')
-
-class SortByAuthor(BookSortStrategy):
-    def sort(self, query_set):
-        return query_set.order_by('author')
-    
-
-# ==== PATTERN FACTORY ====
-
-class SortStrategyFactory:
-    @staticmethod
-    def create_strategy(sort_by: str) -> BookSortStrategy:
-        if sort_by == 'rating':
-            return SortByRating()
-        elif sort_by == 'author':
-            return SortByAuthor()
-        else:
-            return SortByTitle()
 
 
 # ==== VIEWS ====
@@ -153,24 +104,30 @@ def genres(request):
         'books_by_subcategory': books_by_subcategory,
     })
 
-def search_certain_book(request):
-    query = request.GET.get('q')
-    sort_by = request.GET.get('sort', 'book_title')
-    results = []
 
-    if query:
-        queryset = Book.objects.filter(
-            Q(book_title__icontains=query) | Q(author__icontains=query)
-        )
-        sort_strategy = SortStrategyFactory.create_strategy(sort_by)
-        results = sort_strategy.sort(queryset)
+
+def search_certain_book(request):
+    queryset = Book.objects.all()
+
+    # Chain of Responsibility
+    title_handler = TitleSearchHandler()
+    author_handler = AuthorSearchHandler()
+    genre_handler = GenreSearchHandler()
+    sort_handler = SortSearchHandler()
+    title_handler.set_next_handler(author_handler).set_next_handler(genre_handler).set_next_handler(sort_handler)
+    results = title_handler.handle(request, queryset)
+
+    # Strategy + Factory
+    sort_by = request.GET.get('sort', 'title')
+    strategy = SortStrategyFactory.create_strategy(sort_by)
+    results = strategy.sort(results)  # або BookSorter(strategy).sort(results)
 
     return render(request, 'search_results.html', {
-        'query': query,
         'results': results,
+        'query': request.GET.get('q', ''),
+        'search_by': request.GET.get('search_by', 'book_title'),
         'sort_by': sort_by,
     })
-
 
 def search_books(request):
     query = request.GET.get('query', '')
