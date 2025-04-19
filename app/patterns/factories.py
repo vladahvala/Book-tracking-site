@@ -1,4 +1,5 @@
 # ==== PATTERN FACTORY METHOD ====
+# Creational 
 
 from .strategies import SortByRating, SortByAuthor, SortByTitle, SortByYear
 

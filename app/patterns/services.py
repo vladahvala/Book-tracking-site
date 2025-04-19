@@ -1,4 +1,5 @@
 # ==== PATTERN BUILDER ====
+# Creational 
 
 from app.utils.pdf_utils import extract_pdf_details
 from app.models import UserBook
@@ -22,8 +23,12 @@ class BookDetailBuilder:
         return self
 
     def set_pdf_details(self):
-        self.num_pages, self.file_size = extract_pdf_details(self.book.file.path)
+        try:
+            self.num_pages, self.file_size = extract_pdf_details(self.book.file.path)
+        except MemoryError:
+            self.num_pages, self.file_size = None, None
         return self
+
 
     def build(self):
         return {

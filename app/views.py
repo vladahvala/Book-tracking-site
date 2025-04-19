@@ -29,7 +29,10 @@ from .patterns.abstract_factories import (
     PoetryFactory, AdventureFactory, ProseFactory, SciFiAndFantasyFactory, HumorFactory
 )
 
-# ==== PATTERN DECORATOR ====
+from app.utils.pdf_utils import PDFProxy
+
+# ==== PATTERN DECORATOR ==== 
+# Structural 
 
 def login_required_custom(function=None, redirect_field_name='next', login_url='login'):
     """
@@ -149,21 +152,41 @@ def book_detail(request, pk):
     if not session_key:
         request.session.create()
 
-    # Використовуємо Builder для побудови даних
+    confirm = request.GET.get("confirm_download", "false") == "true"
+
+    # Перевірка розміру файлу через проксі
+    proxy = PDFProxy(book.file.path)
+    try:
+        file_too_large = proxy.is_too_large()
+        file_size = f"{proxy.file_size:.2f} MB" if proxy.file_size else None
+    except Exception:
+        file_too_large = False
+        file_size = None
+
+    # Побудова деталей книги
     builder = BookDetailBuilder(book, session_key)
     builder.set_user_book() \
-           .set_similar_books(Book.objects.exclude(pk=pk)) \
-           .set_pdf_details()
+           .set_similar_books(Book.objects.exclude(pk=pk))
 
-    # Після цього отримуємо всі деталі для рендерингу
+    # Завантажувати PDF-деталі тільки якщо не великий файл або є підтвердження
+    if not file_too_large or confirm:
+        builder.set_pdf_details()
+    else:
+        builder.num_pages = None
+        builder.file_size = file_size
+
     context = builder.build()
+    context.update({
+        "book": book,
+        "is_large_file": file_too_large,
+        "file_size": file_size,
+        "confirm_download": confirm,
+        "num_pages": builder.num_pages,
+        "file_size_mb": builder.file_size,
+    })
 
     if request.method == 'POST':
         status = request.POST.get('status')
-
-        if not request.session.session_key:
-            request.session.create()
-
         user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
 
         if status == 'unread':
@@ -174,7 +197,12 @@ def book_detail(request, pk):
 
         return redirect('book_detail', pk=pk)
 
+    # Якщо користувач натискає кнопку для підтвердження завантаження
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"status": "confirmed", "file_url": book.file.url})
+
     return render(request, 'book_detail.html', context)
+
 
 
 def book_stats(request):
@@ -245,11 +273,26 @@ def profile(request):
     read_books = user_books.filter(status='read')
     planning_books = user_books.filter(status='planning')
 
+    # Pagination for each group of books
+    reading_page = request.GET.get('reading_page', 1)
+    read_page = request.GET.get('read_page', 1)
+    planning_page = request.GET.get('planning_page', 1)
+
+    # Create Paginator objects for each group
+    reading_paginator = Paginator(reading_books, 6)  # 6 books per page
+    read_paginator = Paginator(read_books, 6)
+    planning_paginator = Paginator(planning_books, 6)
+
+    # Get the current page for each category
+    reading_books_page = reading_paginator.get_page(reading_page)
+    read_books_page = read_paginator.get_page(read_page)
+    planning_books_page = planning_paginator.get_page(planning_page)
+
     return render(request, 'profile.html', {
         'form': UserBookForm(),
-        'reading_books': reading_books,
-        'read_books': read_books,
-        'planning_books': planning_books,
+        'reading_books_page': reading_books_page,
+        'read_books_page': read_books_page,
+        'planning_books_page': planning_books_page,
     })
 
 

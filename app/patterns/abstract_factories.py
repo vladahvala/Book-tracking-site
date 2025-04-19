@@ -1,4 +1,5 @@
-# ==== PATTERN ABSTRACT FACTORY ====
+# ==== PATTERN ABSTRACT FACTORY ==== 
+# Creational 
 
 from abc import ABC, abstractmethod
 from app.models import Book  # імпортуємо модель Book

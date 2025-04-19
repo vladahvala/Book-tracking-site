@@ -1,4 +1,5 @@
 # ==== PATTERN COMMAND ====
+# Behavioral
 
 class Command:
     def execute(self):

@@ -1,4 +1,5 @@
 # ==== PATTERN CHAIN OF RESPONSIBILITY ====
+# Behavioral
 
 from django.db.models import Q
 from ..models import Book

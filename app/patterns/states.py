@@ -1,4 +1,5 @@
 # ==== PATTERN STATE ====
+# Behavioral
 
 class BookState:
     def update_status(self, user_book, status):

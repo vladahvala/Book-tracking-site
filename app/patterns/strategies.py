@@ -1,4 +1,5 @@
 # ==== PATTERN STRATEGY ====
+# Behavioral
 
 from abc import ABC, abstractmethod
 

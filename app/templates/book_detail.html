@@ -101,14 +101,27 @@
                                 <strong>Created Date:</strong> {{ book.created_date|date:"Y-m-d" }}
                             </li>
                             <li class="list-group-item">
-                                <strong>File:</strong> <a href="{{ book.file.url }}" class="btn btn-danger btn-sm">Download</a>
+                                <!-- Кнопка завантаження -->
+                                <strong>File:</strong> <a href="{{ book.file.url }}" class="btn btn-danger btn-sm" id="download-button" {% if is_large_file %} disabled {% endif %}>Download</a> 
                             </li>
+
+                            {% if is_large_file %}
+                            <!-- Попередження про великий файл -->
+                                <div id="large-file-warning" class="alert alert-warning" style="display: none;">
+                                    This file is large. Do you still want to download it?
+                                    <a href="?confirm_download=true" class="btn btn-warning btn-sm" id="confirm-download">Confirm</a>
+                                    <button class="btn btn-secondary btn-sm" id="cancel-download">Cancel</button>
+                                </div>
+                            {% endif %}
+
+
                             <li class="list-group-item">
                                 <strong>Number of Pages:</strong> {{ num_pages }}
                             </li>
                             <li class="list-group-item">
                                 <strong>File Size:</strong> {{ file_size_mb|floatformat:"2" }} MB
                             </li>
+                            
 
 
                             <li class="list-group-item">
@@ -212,4 +225,51 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById("download-button").addEventListener("click", function(event) {
+    var isLargeFile = "{{ is_large_file|yesno:'true,false' }}" === "true"; // Правильне використання Django шаблона
+
+    if (isLargeFile) {
+        event.preventDefault(); // Запобігаємо стандартному завантаженню
+
+        // Показуємо попередження
+        document.getElementById("large-file-warning").style.display = "block";
+        document.getElementById("download-button").disabled = true; // Відключаємо кнопку
+
+        // Обробник для кнопки "Confirm"
+        document.getElementById("confirm-download").addEventListener("click", function() {
+    // Зробити AJAX запит на сервер
+    fetch("{% url 'book_detail' book.pk %}?confirm_download=true", {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "confirmed") {
+            // Якщо сервер підтвердить, відкриваємо файл для завантаження
+            window.location.href = data.file_url;
+        } else {
+            alert("Download confirmation failed.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error processing the download confirmation.');
+    });
+});
+        // Обробник для кнопки "Cancel"
+        const cancelButton = document.getElementById("cancel-download");
+        if (cancelButton) {
+            cancelButton.addEventListener("click", function() {
+                document.getElementById("large-file-warning").style.display = "none";
+                document.getElementById("download-button").disabled = false; // Вмикаємо кнопку завантаження
+            });
+        }
+    }
+});
+
+</script>
 {% endblock %}
