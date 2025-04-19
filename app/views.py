@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .utils import find_similar_books
 from .models import Book, UserBook, Comment
-from .forms import UserBookForm, CustomUserCreationForm
+from .forms import UserBookForm
 
 import os
 import fitz  # PyMuPDF
@@ -22,6 +22,7 @@ from .patterns.factories import SortStrategyFactory
 from .patterns.handlers import LoginHandler, RegisterHandler
 from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
+from .patterns.states import UnreadState, ReadingState, ReadState
 
 # ==== PATTERN DECORATOR ====
 
@@ -243,10 +244,7 @@ def profile(request):
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
-    # Get books for the user
     user_books = UserBook.objects.filter(session_key=session_key)
-
-    # You can filter by status if needed, for example:
     reading_books = user_books.filter(status='reading')
     read_books = user_books.filter(status='read')
     planning_books = user_books.filter(status='planning')
@@ -268,18 +266,32 @@ def book_status(request, pk):
 
     user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
 
+    # Вибір стану на основі поточного статусу
+    if user_book.status == 'unread':
+        state = UnreadState()
+    elif user_book.status == 'reading':
+        state = ReadingState()
+    elif user_book.status == 'read':
+        state = ReadState()
+
     if request.method == 'POST':
         form = UserBookForm(request.POST, instance=user_book)
         rating = request.POST.get('rating')
+        review = request.POST.get('review')
 
         if form.is_valid():
-            if form.cleaned_data['status'] == 'unread':
-                user_book.delete()
-            else:
-                form.save()
-                if rating:
-                    user_book.rating = int(rating)
-                    user_book.save()
+            if form.cleaned_data['status'] != user_book.status:
+                # Оновлення статусу через відповідний стан
+                state.update_status(user_book, form.cleaned_data['status'])
+            
+            if review:
+                # Додавання відгуку через стан
+                state.add_review(user_book, review)
+            
+            if rating:
+                # Додавання рейтингу через стан
+                state.add_rating(user_book, rating)
+            
             return redirect('profile')
     else:
         form = UserBookForm(instance=user_book)

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from ckeditor.fields import RichTextField
+from .patterns.states import UnreadState, ReadingState, ReadState, PlanningState
 
 class Book(models.Model):
     id = models.AutoField(primary_key=True)
@@ -34,18 +35,40 @@ class UserBook(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, null=True, blank=True)  # Для анонімних користувачів
+    session_key = models.CharField(max_length=40, null=True, blank=True)  # For anonymous users
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
-    rating = models.IntegerField(null=True, blank=True)  # 👈 обов’язково
+    rating = models.IntegerField(null=True, blank=True)  # Optional rating
     review = RichTextField(default="No review yet")
-
 
     def __str__(self):
         return f"{self.book.book_title} - {self.status}"
 
     def get_status_display(self):
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+    # Get the correct state object based on the status
+    def get_state(self):
+        state_map = {
+            'unread': UnreadState(),
+            'reading': ReadingState(),
+            'read': ReadState(),
+            'planning': PlanningState(),
+        }
+        return state_map.get(self.status, UnreadState())
+
+    def update_status(self, status):
+        current_state = self.get_state()
+        current_state.update_status(self, status)
+
+    def add_review(self, review):
+        current_state = self.get_state()
+        current_state.add_review(self, review)
+
+    def add_rating(self, rating):
+        current_state = self.get_state()
+        current_state.add_rating(self, rating)
+
     
         
 class Comment(models.Model):

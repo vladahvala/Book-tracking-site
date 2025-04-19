@@ -10,13 +10,8 @@ class UpdateStatusCommand(Command):
         self.status = status
 
     def execute(self):
-        if self.status == 'unread':
-            self.user_book.delete()
-        else:
-            self.user_book.status = self.status
-            self.user_book.save()
-
-
+        current_state = self.user_book.get_state()  # Отримуємо поточний стан
+        current_state.update_status(self.user_book, self.status)  # Викликаємо метод стану для оновлення статусу
 
 class UpdateRatingCommand(Command):
     def __init__(self, user_book, rating):
@@ -24,9 +19,8 @@ class UpdateRatingCommand(Command):
         self.rating = rating
 
     def execute(self):
-        self.user_book.rating = int(self.rating)
-        self.user_book.save()
-
+        current_state = self.user_book.get_state()  # Отримуємо поточний стан
+        current_state.add_rating(self.user_book, self.rating)  # Викликаємо метод стану для додавання рейтингу
 
 class UpdateReviewCommand(Command):
     def __init__(self, user_book, review):
@@ -34,9 +28,8 @@ class UpdateReviewCommand(Command):
         self.review = review
 
     def execute(self):
-        self.user_book.review = self.review
-        self.user_book.save()
-
+        current_state = self.user_book.get_state()  # Отримуємо поточний стан
+        current_state.add_review(self.user_book, self.review)  # Викликаємо метод стану для додавання відгуку
 
 # CommandInvoker to execute commands
 class CommandInvoker:
