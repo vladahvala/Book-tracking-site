@@ -1,10 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .utils import find_similar_books
+from .utils.utils import find_similar_books
 from .models import Book, UserBook, Comment
 from .forms import UserBookForm
 
-import os
-import fitz  # PyMuPDF
 from django.db.models import Count
 import plotly.graph_objs as go
 from django.core.paginator import Paginator
@@ -23,6 +21,7 @@ from .patterns.handlers import LoginHandler, RegisterHandler
 from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 from .patterns.states import UnreadState, ReadingState, ReadState
+from .patterns.services import BookDetailBuilder
 
 # ==== PATTERN DECORATOR ====
 
@@ -139,12 +138,6 @@ def search_books(request):
         'similar_books': similar_books,
     })
 
-def extract_pdf_details(pdf_path):
-    document = fitz.open(pdf_path)
-    num_pages = document.page_count
-    file_size = os.path.getsize(pdf_path) / (1024 * 1024)
-    return num_pages, file_size
-
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
 
@@ -152,14 +145,18 @@ def book_detail(request, pk):
     if not session_key:
         request.session.create()
 
-    user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
+    # Використовуємо Builder для побудови даних
+    builder = BookDetailBuilder(book, session_key)
+    builder.set_user_book() \
+           .set_similar_books(Book.objects.exclude(pk=pk)) \
+           .set_pdf_details()
 
-    all_books = Book.objects.exclude(pk=pk)
-    similar_books = find_similar_books(book.book_title, all_books)
-    num_pages, file_size = extract_pdf_details(book.file.path)
+    # Після цього отримуємо всі деталі для рендерингу
+    context = builder.build()
 
     if request.method == 'POST':
         status = request.POST.get('status')
+
         if not request.session.session_key:
             request.session.create()
 
@@ -173,13 +170,8 @@ def book_detail(request, pk):
 
         return redirect('book_detail', pk=pk)
 
-    return render(request, 'book_detail.html', {
-        'book': book,
-        'similar_books': similar_books,
-        'num_pages': num_pages,
-        'file_size_mb': file_size,
-        'user_book': user_book,
-    })
+    return render(request, 'book_detail.html', context)
+
 
 def book_stats(request):
     data = Book.objects.values('Publication_Year', 'Category').annotate(count=Count('id'))
