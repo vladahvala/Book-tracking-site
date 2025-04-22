@@ -180,7 +180,7 @@
                 No comments yet <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
                 Add One</a>
               {% else %}  
-              <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
+              <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
               <br><br>
                     {% for comment in book.comments.all %}
                         <strong>
@@ -190,11 +190,7 @@
                         {{ comment.body }}
                         <br><br><br>
                     {% endfor %}     
-              {% endif %}  
-
-              <br>
-
-              <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
+              {% endif %} 
             </div>
        
 

@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}{{ book.book_title }}{% endblock %}
+{% block title %}Add comment to {{ book.book_title }}{% endblock %}
 
 {% block content %}
-<h1>Add comment</h1>
+<h1>Add comment to "{{ book.book_title }}"</h1>
 <br><br>
 
-<div class="form-group">
-    <form method="POST"></form>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-secondary">Add comment</button>
-</div>
-
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-secondary">Add comment</button>
+</form>
 {% endblock %}

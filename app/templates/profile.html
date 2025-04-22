@@ -16,8 +16,10 @@
   <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% for user_book in reading_books_page %}
           <div class="book-card">
+              <a href="{% url 'book_detail' user_book.book.id %}">
               <img src="{{ user_book.book.image.url }}" alt="Book Cover">
               <p><strong>{{ user_book.book.book_title }}</strong></p>
+            </a>
               <p><strong>{{ user_book.book.author }}</strong></p>
               <form method="post">
                   {% csrf_token %}
@@ -56,8 +58,10 @@
   <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% for user_book in read_books_page %}
           <div class="book-card">
+            <a href="{% url 'book_detail' user_book.book.id %}">
               <img src="{{ user_book.book.image.url }}" alt="Book Cover">
               <p><strong>{{ user_book.book.book_title }}</strong></p>
+            </a>
               <p><strong>{{ user_book.book.author }}</strong></p>
               <form method="post">
                   {% csrf_token %}
@@ -125,8 +129,10 @@
   <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% for user_book in planning_books_page %}
           <div class="book-card">
+            <a href="{% url 'book_detail' user_book.book.id %}">
               <img src="{{ user_book.book.image.url }}" alt="Book Cover">
               <p><strong>{{ user_book.book.book_title }}</strong></p>
+            </a>
               <p><strong>{{ user_book.book.author }}</strong></p>
               <form method="post">
                   {% csrf_token %}
@@ -395,6 +401,10 @@ form button:hover {
   background-color: #ddd;
 }
 
+
+.book-card a{
+  color: #C68EFD;
+}
 
 .star-rating {
   direction: rtl;

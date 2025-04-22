@@ -9,6 +9,16 @@
             
             background-color: #f8f9fa; /* Light gray background */
         }
+        
+        .search-text {
+            color: black;              /* Колір введеного тексту */
+            background-color: white;  /* Якщо потрібно змінити фон */
+        }
+
+        /* Окремо можна стилізувати плейсхолдер, якщо хочеш інший колір */
+        .search-text::placeholder {
+            color: gray;
+        }
 
         .result-item {
             margin-bottom: 20px; /* Space between each result item */
@@ -94,7 +104,7 @@
             <!-- Search Form -->
             <form method="get" action="{% url 'search_books' %}" class="d-flex justify-content-center w-100">
                 <div class="input-group w-75">
-                    <input type="text" name="query" class="form-control" value="{{ query }}" placeholder="Search..." autocomplete="off">
+                    <input type="text" name="query" class="form-control search-text" value="{{ query }}" placeholder="Search..." autocomplete="off">
                     <button type="submit" class="btn btn-warning">Search</button>
                 </div>
             </form>

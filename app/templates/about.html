@@ -686,7 +686,7 @@ a {
             <p>Welcome to our Book Search page! Whether you're looking for a specific title, exploring new genres, 
             or searching for hidden literary gems, this is the place for you. 
             Use our easy search tool to find books by title, author or genre.</p>
-            <a href="http://127.0.0.1:8000/search/"><button class="learn_more">Search ⇒</button></a>
+            <a href="{% url 'search_certain_book' %}"><button class="learn_more">Search ⇒</button></a>
           </div>
         </div>
       </section>
@@ -699,7 +699,7 @@ a {
               Discover a curated list of book recommendations to suit every taste, from timeless classics to 
               modern masterpieces. Whether you're into thrilling mysteries, heartfelt dramas, or imaginative fantasy,
                we've got something for you!</p>
-               <a href="http://127.0.0.1:8000"><button class="learn_more">Get recommendations ⇒</button></a>
+               <a href="{% url 'search_books' %}"><button class="learn_more">Get recommendations ⇒</button></a>
           </div>
           <div class="right-img">
             <img src="https://neomwellbeing.com/cdn/shop/articles/Summer_Reading_List_Collage_1.jpg?v=1720098750&width=1920" alt="photo">
@@ -721,7 +721,7 @@ a {
             <h3>Book analysis</h3>
             <p>You can see the book genres, which were most popular thoughout history!</p>
             <div class="social">
-              <a title="Right Arrow" href="http://127.0.0.1:8000/trends/">
+              <a title="Right Arrow" href="{% url 'trends' %}">
                 <i class="ri-arrow-right-line"></i>
               </a>
             </div> 

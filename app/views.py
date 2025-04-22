@@ -69,15 +69,12 @@ def logoutUser(request):
     logout(request)
     return redirect('login')
 
-class AddCommentView(CreateView):
-    model = Comment
-    template_name='add_comment.html'
-    fields='__all__'
 
 
 # ==== GENERAL VIEWS ====
 
-# book genres (books sorted in categories)
+# book genres 
+# (books sorted in categories)
 def genres(request):
     # Створення фабрик для категорій
     factories = [
@@ -116,7 +113,7 @@ def genres(request):
     })
 
 
-# search for a certain book y title/author/genre
+# search for a certain book by title/author/genre
 def search_certain_book(request):
     queryset = Book.objects.all()
 
@@ -141,7 +138,8 @@ def search_certain_book(request):
     })
 
 
-# book recommendations (seraching for book recs using Word2Vec model)
+# book recommendations 
+# (seraching for book recs using Word2Vec model)
 def search_books(request):
     query = request.GET.get('query', '')
     similar_books = find_similar_books(query, Book.objects.all())
@@ -152,6 +150,8 @@ def search_books(request):
     })
 
 
+# book request 
+# (user can send a request too admin about what book should be added)
 def submit_book_request(request):
     if request.method == 'POST':
         book_title = request.POST.get('book_title')
@@ -163,8 +163,9 @@ def submit_book_request(request):
     return JsonResponse({'message': 'Invalid request'}, status=400)
 
 
+# book stats
+# (showing most popular book genres in certain years using bar chart)
 def book_stats(request):
-    # Отримаємо дані, виключаючи жанр 'none'
     data = Book.objects.exclude(genre__iexact='none').values('Publication_Year', 'genre').annotate(count=Count('id'))
 
     genres = sorted(set(item['genre'] for item in data))
@@ -197,10 +198,38 @@ def about(request):
     return render(request, 'about.html')
 
 
+# book сcomments
+# (adding comments to books)
+class AddCommentView(CreateView):
+    model = Comment
+    template_name = 'add_comment.html'
+    fields = ['name', 'body']  # book передаємо вручну
+
+    def form_valid(self, form):
+        # Прив’язуємо коментар до конкретної книги
+        book = get_object_or_404(Book, pk=self.kwargs['pk'])
+        form.instance.book = book
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        # Щоб мати доступ до книги у шаблоні
+        context = super().get_context_data(**kwargs)
+        context['book'] = get_object_or_404(Book, pk=self.kwargs['pk'])
+        return context
+
+    def get_success_url(self):
+        # Повернення до сторінки детальної інформації про книгу
+        return redirect('book_detail', pk=self.kwargs['pk']).url
+
+
+
+
 # ==== AUTH VIEWS ====
+
+# book properties for each book
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
-    user = request.user if request.user.is_authenticated else None  # Якщо користувач авторизований, отримаємо його
+    user = request.user if request.user.is_authenticated else None  
 
     confirm = request.GET.get("confirm_download", "false") == "true"
 
@@ -255,7 +284,8 @@ def book_detail(request, pk):
 
 
 
-# profile book page (books sorted in tabs reading/read/planning)
+# profile book page 
+# (books sorted in tabs reading/read/planning)
 @login_required_custom(login_url='login')
 def profile(request):
     user = request.user  # Отримуємо аутентифікованого користувача
@@ -289,7 +319,6 @@ def profile(request):
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
-    # Замінили session_key на user
     user_books = UserBook.objects.filter(user=user)
     reading_books = user_books.filter(status='reading')
     read_books = user_books.filter(status='read')
@@ -318,12 +347,14 @@ def profile(request):
     })
 
 
+# book status
+# (reading for books in process/read for read books/planning for books the user 
+#  is planning to read/unread for all other books)
 @login_required_custom(login_url='login')
 def book_status(request, pk):
     book = get_object_or_404(Book, pk=pk)
-    user = request.user  # Отримуємо поточного аутентифікованого користувача
+    user = request.user  
 
-    # Замінимо session_key на user для аутентифікованих користувачів
     user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
 
     # Вибір стану на основі поточного статусу
