@@ -7,8 +7,6 @@ import smart_open
 model_path = os.path.join(settings.BASE_DIR, 'app', 'GoogleNews-vectors-negative300.bin')
 
 
-
-
 def load_word2vec_model(model_path):
     with smart_open.open(model_path, 'rb') as f:
         header = f.readline()

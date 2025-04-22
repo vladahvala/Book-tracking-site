@@ -75,8 +75,9 @@ class AddCommentView(CreateView):
     fields='__all__'
 
 
-# ==== VIEWS ====
+# ==== GENERAL VIEWS ====
 
+# book genres (books sorted in categories)
 def genres(request):
     # Створення фабрик для категорій
     factories = [
@@ -115,6 +116,7 @@ def genres(request):
     })
 
 
+# search for a certain book y title/author/genre
 def search_certain_book(request):
     queryset = Book.objects.all()
 
@@ -138,6 +140,8 @@ def search_certain_book(request):
         'sort_by': sort_by,
     })
 
+
+# book recommendations (seraching for book recs using Word2Vec model)
 def search_books(request):
     query = request.GET.get('query', '')
     similar_books = find_similar_books(query, Book.objects.all())
@@ -147,78 +151,17 @@ def search_books(request):
         'similar_books': similar_books,
     })
 
-@login_required_custom(login_url='login')
-def book_detail(request, pk):
-    book = get_object_or_404(Book, pk=pk)
-
-    user = request.user  # Отримуємо поточного аутентифікованого користувача
-
-    confirm = request.GET.get("confirm_download", "false") == "true"
-
-    # Перевірка розміру файлу через проксі
-    proxy = PDFProxy(book.file.path)
-    try:
-        file_too_large = proxy.is_too_large()
-        file_size = f"{proxy.file_size:.2f} MB" if proxy.file_size else None
-    except Exception:
-        file_too_large = False
-        file_size = None
-
-    # Побудова деталей книги
-    builder = BookDetailBuilder(book, user)
-    builder.set_user_book() \
-           .set_similar_books(Book.objects.exclude(pk=pk))
-
-    # Завантажувати PDF-деталі тільки якщо не великий файл або є підтвердження
-    if not file_too_large or confirm:
-        builder.set_pdf_details()
-    else:
-        builder.num_pages = None
-        builder.file_size = file_size
-
-    context = builder.build()
-    context.update({
-        "book": book,
-        "is_large_file": file_too_large,
-        "file_size": file_size,
-        "confirm_download": confirm,
-        "num_pages": builder.num_pages,
-        "file_size_mb": builder.file_size,
-    })
-
-    if request.method == 'POST':
-        status = request.POST.get('status')
-        # Заміна session_key на user для аутентифікованих користувачів
-        user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
-
-        if status == 'unread':
-            user_book.delete()  # Якщо статус "непрочитано", видаляємо запис
-        else:
-            user_book.status = status
-            user_book.save()
-
-        return redirect('book_detail', pk=pk)
-
-    # Якщо користувач натискає кнопку для підтвердження завантаження
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({"status": "confirmed", "file_url": book.file.url})
-
-    return render(request, 'book_detail.html', context)
-
 
 def submit_book_request(request):
     if request.method == 'POST':
         book_title = request.POST.get('book_title')
         author = request.POST.get('author')
-
-        # Створюємо новий запит на книгу
         BookRequest.objects.create(book_title=book_title, author=author)
 
-        # Повертаємо JSON відповідь для AJAX
         return JsonResponse({'message': 'Thank you for your request! We will add the book soon.'}, status=200)
     
-    # Якщо запит не POST, перенаправляємо на головну сторінку
     return JsonResponse({'message': 'Invalid request'}, status=400)
+
 
 def book_stats(request):
     # Отримаємо дані, виключаючи жанр 'none'
@@ -253,6 +196,66 @@ def book_stats(request):
 def about(request):
     return render(request, 'about.html')
 
+
+# ==== AUTH VIEWS ====
+def book_detail(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    user = request.user if request.user.is_authenticated else None  # Якщо користувач авторизований, отримаємо його
+
+    confirm = request.GET.get("confirm_download", "false") == "true"
+
+    # Перевірка розміру файлу через проксі
+    proxy = PDFProxy(book.file.path)
+    try:
+        file_too_large = proxy.is_too_large()
+        file_size = f"{proxy.file_size:.2f} MB" if proxy.file_size else None
+    except Exception:
+        file_too_large = False
+        file_size = None
+
+    # Побудова деталей книги
+    builder = BookDetailBuilder(book, user)
+    builder.set_user_book() \
+           .set_similar_books(Book.objects.exclude(pk=pk))
+
+    # Завантажувати PDF-деталі тільки якщо не великий файл або є підтвердження
+    if not file_too_large or confirm:
+        builder.set_pdf_details()
+    else:
+        builder.num_pages = None
+        builder.file_size = file_size
+
+    context = builder.build()
+    context.update({
+        "book": book,
+        "is_large_file": file_too_large,
+        "file_size": file_size,
+        "confirm_download": confirm,
+        "num_pages": builder.num_pages,
+        "file_size_mb": builder.file_size,
+    })
+
+    # Логіка зміни статусу (тільки для авторизованих користувачів)
+    if request.method == 'POST' and user:  # Тільки для авторизованих користувачів
+        status = request.POST.get('status')
+        user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
+
+        if status == 'unread':
+            user_book.delete()  
+        else:
+            user_book.status = status
+            user_book.save()
+
+        return redirect('book_detail', pk=pk)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"status": "confirmed", "file_url": book.file.url})
+
+    return render(request, 'book_detail.html', context)
+
+
+
+# profile book page (books sorted in tabs reading/read/planning)
 @login_required_custom(login_url='login')
 def profile(request):
     user = request.user  # Отримуємо аутентифікованого користувача
