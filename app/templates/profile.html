@@ -69,7 +69,36 @@
                       <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
                   </select>
                   <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
-              </form>
+                  <!-- ⭐⭐⭐⭐⭐ Rating -->
+                  <div class="star-rating">
+                    {% for i in "54321" %}
+                      {% with i|add:0 as star %}
+                        <input type="radio"
+                               id="star{{ star }}-{{ user_book.book.id }}"
+                               name="rating"
+                               value="{{ star }}"
+                               {% if user_book.rating == star %}checked{% endif %}>
+                        <label for="star{{ star }}-{{ user_book.book.id }}">&#9733;</label>
+                      {% endwith %}
+                    {% endfor %}
+                  </div>
+                
+                  <button type="submit" class="update-rating" name="action" value="update_rating">Update Rating</button>
+                
+                  
+                  <!-- Кнопка для показу форми відгуку -->
+                  <button type="button" class="review-btn" data-book-id="{{ user_book.book.id }}" onclick="toggleReviewForm({{ user_book.book.id }})">Review</button>
+
+                  <!-- Форма для відгуку (спочатку прихована) -->
+                  <div class="review-form" id="review-form-{{ user_book.book.id }}" style="display: none;">
+                      <form method="POST" action="{% url 'profile' %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                          <textarea name="review" rows="4" cols="50">{{ user_book.review }}</textarea>
+                          <button type="submit" class="save-review-btn"  name="action" value="update_review">Save Review</button>
+                      </form>
+                  </div>
+                </form>
           </div>
       {% empty %}
           <p>No books in this category.</p>

@@ -548,6 +548,99 @@ line-height: 1.6;
     margin-top: 15px;
 }
 
+a {
+  color: rgb(0 0 0);
+}
+
+
+/* Modal styles */
+/* Стилі для поля вводу */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+/* Коли фокус на полі вводу */
+.form-group input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Стилі для кнопки */
+.six .submit_six {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  display: inline-block;
+  width: 100%; /* Щоб кнопка займала всю ширину */
+  transition: background-color 0.3s ease;
+}
+
+.six .submit_six:hover {
+  background-color: #0056b3;
+}
+
+/* Модальне вікно: Центрування контенту */
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 40px;
+  border: 1px solid #888;
+  width: 50%; /* Можна змінити, залежно від розміру екрану */
+  border-radius: 10px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  padding-top: 60px;
+}
+
+/* Закрити кнопку (хрестик) */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+}
+
 </style>
 
 
@@ -587,15 +680,13 @@ line-height: 1.6;
       <section class="second">
         <div class="container">
           <div class="left-img">
-            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="Person">
+            <img src="https://www.usedbooksearch.net/wp-content/uploads/2020/10/used-book-search-online.png" alt="Book_search">
           </div>
           <div class="right-content">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. 
-            Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. 
-            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
-            Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. 
-            Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem.
-            <button class="learn_more">Дізнатися більше ⇒</button>
+            <p>Welcome to our Book Search page! Whether you're looking for a specific title, exploring new genres, 
+            or searching for hidden literary gems, this is the place for you. 
+            Use our easy search tool to find books by title, author or genre.</p>
+            <a href="http://127.0.0.1:8000/search/"><button class="learn_more">Search ⇒</button></a>
           </div>
         </div>
       </section>
@@ -604,15 +695,14 @@ line-height: 1.6;
       <section class="third">
         <div class="container">
           <div class="left-content">
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. 
-            Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. 
-            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
-            Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. 
-            Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem.</p>
-            <button class="learn_more">Зв'яжіться з нами ⇒</button>
+            <p>Looking for your next great read? 
+              Discover a curated list of book recommendations to suit every taste, from timeless classics to 
+              modern masterpieces. Whether you're into thrilling mysteries, heartfelt dramas, or imaginative fantasy,
+               we've got something for you!</p>
+               <a href="http://127.0.0.1:8000"><button class="learn_more">Get recommendations ⇒</button></a>
           </div>
           <div class="right-img">
-            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
+            <img src="https://neomwellbeing.com/cdn/shop/articles/Summer_Reading_List_Collage_1.jpg?v=1720098750&width=1920" alt="photo">
           </div>
         </div>    
       </section>  
@@ -621,64 +711,79 @@ line-height: 1.6;
       <section class="four">
         <div class="container">
           <div class="member">
-            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
-            <h3>Lorem Ipsum</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus. </p>
-            <div class="social">
-              <a title="Instagram" href="index.html">
-                <i class="ri-instagram-fill"></i>
-              </a>
-              <a title="Facebook" href="index.html">
-                <i class="ri-facebook-box-fill"></i>
-              </a>
-              <a title="Twitter" href="index.html">
-                <i class="ri-twitter-fill"></i>
-              </a>
-            </div>
+            <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740" alt="photo">
+            <h3>Profile</h3>
+            <p>You can save books you need to your profile after registration and add them to reading/read/planning. Also you can write reviews and add your own book rating.
+              You can also add comments to books! </p>
           </div>  
           <div class="member">
-            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="photo">
-            <h3>Lorem Ipsum</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus.</p>
+            <img src="https://d3an9kf42ylj3p.cloudfront.net/uploads/2022/08/pg_analyticstools_aug22.jpg" alt="photo">
+            <h3>Book analysis</h3>
+            <p>You can see the book genres, which were most popular thoughout history!</p>
             <div class="social">
-              <a title="Instagram" href="index.html">
-                <i class="ri-instagram-fill"></i>
-              </a>
-              <a title="Facebook" href="index.html">
-                <i class="ri-facebook-box-fill"></i>
-              </a>
-              <a title="Twitter" href="index.html">
-                <i class="ri-twitter-fill"></i>
+              <a title="Right Arrow" href="http://127.0.0.1:8000/trends/">
+                <i class="ri-arrow-right-line"></i>
               </a>
             </div> 
           </div>  
         </div>   
       </section>  
 
-      <!-- Fifth -->
       <section class="five">
         <div class="container">
             <div class="video-wrapper">
-                <iframe src="https://youtu.be/PzGI-FBzcNE?si=_l_QLBStEbcwNSeQ" frameborder="0" 
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/kO2dTFmBK1M?si=mJpM8LENe_7GkNi_" 
+                        frameborder="0" 
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen></iframe>
             </div>      
         </div>    
     </section>
     
+    
 
       <!-- Sixth -->
-      <section class="six">
-        <div class="container">
-          <h4>Lorem Ipsum</h4>
-          <div class="center-img">
-            <img src="https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=" alt="discount cupons">
-          </div>
-          <p><i>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus.</i></p>
-          <button class="learn_more">Зв'яжіться з нами ⇒</button>
-        </div>
-      </section>
+   <!-- Sixth -->
+  <!-- Sixth Section -->
+<section class="six">
+  <div class="container">
+    <h4>No book you need?</h4>
+    <div class="center-img">
+      <img src="https://media.istockphoto.com/id/1220490886/vector/vector-no-book-or-reading-sign-illustration.jpg?s=612x612&w=0&k=20&c=RjYeTmuqCH1Jk3MRKUfxFA7ktBYBzDKcbQd55Juj9PQ=" alt="no_book_found">
     </div>
+    <p><i>If you haven't found the book you searched for, contact us and we will add it in a while!</i></p>
+
+    <!-- Button to trigger modal -->
+    <button id="openModal" class="learn_more">Submit Book Request ⇒</button>
+
+    <!-- Modal for the form -->
+   <!-- Modal for the form -->
+<div id="bookRequestModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h4>Submit Book Request</h4>
+    <form id="bookRequestForm" method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="book_title">Book Title:</label>
+        <input type="text" id="book_title" name="book_title" placeholder="Enter book title" autocomplete="off" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author" placeholder="Enter author name" autocomplete="off" required>
+      </div>
+    
+      <button type="submit" class="submit_six">Submit Request ⇒</button>
+    </form>
+  </div>
+</div>
+
+    </div>
+  </div>
+</section>
+
+  
   
     <!--=============== SCRIPT ===============-->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -745,6 +850,61 @@ $(document).ready(function() {
     }
 });
 
+// Отримуємо елементи модального вікна та кнопки
+var modal = document.getElementById("bookRequestModal");
+var btn = document.getElementById("openModal");
+var span = document.getElementsByClassName("close")[0];
+var form = document.getElementById("bookRequestForm");
+
+// Коли користувач натискає кнопку, модальне вікно відкривається
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+
+// Коли користувач натискає на хрестик, модальне вікно закривається
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+// Коли користувач натискає будь-де поза модальним вікном, воно також закривається
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Виконання AJAX запиту при надсиланні форми
+form.onsubmit = function(event) {
+  event.preventDefault();  // Запобігаємо стандартному відправленню форми
+
+  // Отримуємо значення полів форми
+  var bookTitle = document.getElementById("book_title").value;
+  var author = document.getElementById("author").value;
+
+  // Створюємо FormData об'єкт для передачі даних
+  var formData = new FormData();
+  formData.append('book_title', bookTitle);
+  formData.append('author', author);
+  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+  // Виконуємо AJAX запит
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', "{% url 'submit_book_request' %}", true);
+  xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // Додаємо header для AJAX запиту
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      // Якщо запит успішний, закриваємо модальне вікно
+      modal.style.display = "none";
+      
+      // Можна додатково показати повідомлення користувачеві
+      alert("Thank you for your request! We will add the book soon.");
+    } else {
+      // Якщо є помилка, повідомляємо користувача
+      alert("Something went wrong. Please try again.");
+    }
+  };
+  xhr.send(formData);
+}
 
     </script>
        

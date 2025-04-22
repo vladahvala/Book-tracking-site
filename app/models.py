@@ -35,7 +35,7 @@ class UserBook(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, null=True, blank=True)  # For anonymous users
+    # Видаляємо session_key, оскільки користувач буде використовувати свою сесію
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
     rating = models.IntegerField(null=True, blank=True)  # Optional rating
@@ -69,6 +69,13 @@ class UserBook(models.Model):
         current_state = self.get_state()
         current_state.add_rating(self, rating)
 
+class BookRequest(models.Model):
+    book_title = models.CharField(max_length=250)
+    author = models.CharField(max_length=250)
+    created_at = models.DateTimeField(auto_now_add=True)  # автоматично зберігає дату створення запиту
+
+    def __str__(self):
+        return f"Request for {self.book_title} by {self.author} on {self.created_at}"
     
         
 class Comment(models.Model):

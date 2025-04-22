@@ -13,6 +13,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from django.http import HttpResponse
+from .models import BookRequest
 
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -145,12 +147,11 @@ def search_books(request):
         'similar_books': similar_books,
     })
 
+@login_required_custom(login_url='login')
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
 
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.create()
+    user = request.user  # Отримуємо поточного аутентифікованого користувача
 
     confirm = request.GET.get("confirm_download", "false") == "true"
 
@@ -164,7 +165,7 @@ def book_detail(request, pk):
         file_size = None
 
     # Побудова деталей книги
-    builder = BookDetailBuilder(book, session_key)
+    builder = BookDetailBuilder(book, user)
     builder.set_user_book() \
            .set_similar_books(Book.objects.exclude(pk=pk))
 
@@ -187,10 +188,11 @@ def book_detail(request, pk):
 
     if request.method == 'POST':
         status = request.POST.get('status')
-        user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
+        # Заміна session_key на user для аутентифікованих користувачів
+        user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
 
         if status == 'unread':
-            user_book.delete()
+            user_book.delete()  # Якщо статус "непрочитано", видаляємо запис
         else:
             user_book.status = status
             user_book.save()
@@ -204,23 +206,39 @@ def book_detail(request, pk):
     return render(request, 'book_detail.html', context)
 
 
+def submit_book_request(request):
+    if request.method == 'POST':
+        book_title = request.POST.get('book_title')
+        author = request.POST.get('author')
+
+        # Створюємо новий запит на книгу
+        BookRequest.objects.create(book_title=book_title, author=author)
+
+        # Повертаємо JSON відповідь для AJAX
+        return JsonResponse({'message': 'Thank you for your request! We will add the book soon.'}, status=200)
+    
+    # Якщо запит не POST, перенаправляємо на головну сторінку
+    return JsonResponse({'message': 'Invalid request'}, status=400)
 
 def book_stats(request):
-    data = Book.objects.values('Publication_Year', 'Category').annotate(count=Count('id'))
-    categories = sorted(set(item['Category'] for item in data))
+    # Отримаємо дані, виключаючи жанр 'none'
+    data = Book.objects.exclude(genre__iexact='none').values('Publication_Year', 'genre').annotate(count=Count('id'))
+
+    genres = sorted(set(item['genre'] for item in data))
     years = sorted(set(item['Publication_Year'] for item in data))
 
-    category_counts_by_year = {cat: [0] * len(years) for cat in categories}
+    genre_counts_by_year = {genre: [0] * len(years) for genre in genres}
     for item in data:
-        category_counts_by_year[item['Category']][years.index(item['Publication_Year'])] = item['count']
+        genre_counts_by_year[item['genre']][years.index(item['Publication_Year'])] = item['count']
 
     fig = go.Figure()
-    for cat in categories:
-        fig.add_trace(go.Bar(x=years, y=category_counts_by_year[cat], name=cat))
+    for genre in genres:
+        counts = genre_counts_by_year[genre]
+        fig.add_trace(go.Bar(x=years, y=counts, name=genre))
 
     fig.update_layout(
         barmode='stack',
-        title='Stacked Vertical Bar Chart of Book Categories by Publication Year',
+        title='Stacked Vertical Bar Chart of Book Genres by Publication Year',
         xaxis_title='Publication Year',
         yaxis_title='Frequency',
         plot_bgcolor='rgba(0,0,0,0)'
@@ -237,10 +255,9 @@ def about(request):
 
 @login_required_custom(login_url='login')
 def profile(request):
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.create()
+    user = request.user  # Отримуємо аутентифікованого користувача
 
+    # Використовуємо `user` замість `session_key`
     invoker = CommandInvoker()
 
     if request.method == 'POST':
@@ -253,7 +270,8 @@ def profile(request):
         if book_id:
             try:
                 book = Book.objects.get(id=book_id)
-                user_book = UserBook.objects.get(session_key=session_key, book=book)
+                # Замінили session_key на user
+                user_book = UserBook.objects.get(user=user, book=book)
 
                 if action == 'update_status' and status:
                     invoker.add_command(UpdateStatusCommand(user_book, status))
@@ -268,7 +286,8 @@ def profile(request):
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 pass
 
-    user_books = UserBook.objects.filter(session_key=session_key)
+    # Замінили session_key на user
+    user_books = UserBook.objects.filter(user=user)
     reading_books = user_books.filter(status='reading')
     read_books = user_books.filter(status='read')
     planning_books = user_books.filter(status='planning')
@@ -299,11 +318,10 @@ def profile(request):
 @login_required_custom(login_url='login')
 def book_status(request, pk):
     book = get_object_or_404(Book, pk=pk)
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.create()
+    user = request.user  # Отримуємо поточного аутентифікованого користувача
 
-    user_book, _ = UserBook.objects.get_or_create(session_key=session_key, book=book)
+    # Замінимо session_key на user для аутентифікованих користувачів
+    user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
 
     # Вибір стану на основі поточного статусу
     if user_book.status == 'unread':

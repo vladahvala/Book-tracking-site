@@ -15,4 +15,5 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('search/', views.search_certain_book, name='search_certain_book'),
     path('book/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
+    path('submit_book_request/', views.submit_book_request, name='submit_book_request'),
 ]

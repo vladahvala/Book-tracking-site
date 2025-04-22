@@ -94,7 +94,7 @@
             <!-- Search Form -->
             <form method="get" action="{% url 'search_books' %}" class="d-flex justify-content-center w-100">
                 <div class="input-group w-75">
-                    <input type="text" name="query" class="form-control" value="{{ query }}" placeholder="Search...">
+                    <input type="text" name="query" class="form-control" value="{{ query }}" placeholder="Search..." autocomplete="off">
                     <button type="submit" class="btn btn-warning">Search</button>
                 </div>
             </form>

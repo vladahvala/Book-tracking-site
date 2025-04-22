@@ -6,16 +6,17 @@ from app.models import UserBook
 from app.views import find_similar_books
 
 class BookDetailBuilder:
-    def __init__(self, book, session_key):
+    def __init__(self, book, user):
         self.book = book
-        self.session_key = session_key
+        self.user = user  # Замість session_key, передаємо користувача
         self.user_book = None
         self.similar_books = []
         self.num_pages = 0
         self.file_size = 0
 
     def set_user_book(self):
-        self.user_book, _ = UserBook.objects.get_or_create(session_key=self.session_key, book=self.book)
+        # Тепер використовуємо користувача замість session_key
+        self.user_book, _ = UserBook.objects.get_or_create(user=self.user, book=self.book)
         return self
 
     def set_similar_books(self, all_books):
@@ -28,7 +29,6 @@ class BookDetailBuilder:
         except MemoryError:
             self.num_pages, self.file_size = None, None
         return self
-
 
     def build(self):
         return {

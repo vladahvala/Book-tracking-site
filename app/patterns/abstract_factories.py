@@ -121,8 +121,8 @@ class ProseFactory(AbstractFactory):
 # Конкретна фабрика для категорії Science Fiction and Fantasy
 class SciFiAndFantasyFactory(AbstractFactory):
     def create_categories(self):
-        return ['Heroic fantasy', 'Cyberpunk', 'Mythological fantasy', 'Post-apocalypse', 'Slavic fantasy', 
-                'Horror', 'Steampunk', 'Fantasy', 'Epic science fiction', 'Modern fairy tale']
+        return ['Heroic fantasy', 'Cyberpunk', 'Mythological fantasy', 'Dystopia', 'Post-apocalypse', 'Slavic fantasy', 
+                'Horror', 'Steampunk', 'Fantasy', 'Epic science fiction', 'Fairytale', 'Modern fairy tale']
     
     def create_books_by_subcategory(self):
         return Book.objects.filter(genre__in=self.create_categories()).values('id', 'book_title', 'author')
