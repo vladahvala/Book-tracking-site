@@ -330,7 +330,7 @@ def profile(request):
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 messages.error(request, "Книжку не знайдено або її немає у вашому списку.")
 
-   # --- Обробка зміни біо ---
+    # --- Обробка зміни біо ---
     if request.method == 'POST' and 'update_bio' in request.POST:
         bio = request.POST.get('bio')
         if bio:
@@ -340,15 +340,18 @@ def profile(request):
             return redirect('profile')
 
     # --- Обробка зміни фото ---
-    if request.method == 'POST' and 'update_photo' in request.FILES:
-        photo = request.FILES.get('photo')
-        if photo:
+   # --- Обробка зміни фото через AJAX ---
+    if request.method == 'POST' and 'update_photo' in request.POST:
+        if 'photo' in request.FILES:
+            photo = request.FILES['photo']
             user_profile.photo = photo
             user_profile.save()
-            messages.success(request, "Фото профілю змінено.")
-            return redirect('profile')
-
-
+            return JsonResponse({
+                'success': True,
+                'new_photo_url': user_profile.photo.url
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Фото не надано.'})
 
     # --- Обробка форми профілю --- 
     if request.method == 'POST' and 'update_profile' in request.POST:

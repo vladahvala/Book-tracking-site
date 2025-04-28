@@ -12,10 +12,10 @@
 
 <!-- Profile Photo Top Right -->
 <div class="profile-photo-wrapper" onclick="toggleProfileModal()">
-  <img src="{{ user.profile.photo.url }}" alt="Profile Photo" class="profile-photo">
+  <img class="profile-photo" src="{{ user_profile.photo.url }}" alt="Фото профілю">
+  
 </div>
 
-<!-- Modal with Profile Info -->
 <!-- Modal with Profile Info -->
 <div id="profileModal" class="modal">
   <div class="modal-content">
@@ -23,35 +23,32 @@
       
       <!-- Profile Display Section -->
       <div id="profileDisplay">
-          <img src="{{ user.profile.photo.url }}" alt="Full Profile Photo" class="modal-photo">
+          <img src="{{ user_profile.photo.url }}" alt="Full Profile Photo" class="modal-photo">
           <h2>{{ user.username }}</h2>
-          <p id="bioText">{{ user.profile.bio }}</p>
-          <button id="editBioButton" onclick="editBio()">Редагувати біо</button>
-          <button id="changePhotoButton" onclick="changePhoto()">Змінити фото</button>
+          <p id="bioText">{{ user_profile.bio }}</p>
+          <button id="editBioButton" onclick="editBio()">Edit bio</button>
+          <button id="changePhotoButton" onclick="changePhoto()">Edit photo</button>
       </div>
       
-    <!-- Edit Bio Form (hidden initially) -->
-<div id="bioEditForm" style="display: none;">
-  <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <textarea name="bio" rows="4" cols="50">{{ user.profile.bio }}</textarea><br>
-      <button type="submit" name="update_bio">Зберегти біо</button>
-      <button type="button" onclick="cancelEditBio()">Скасувати</button>
-  </form>
-</div>
+      <!-- Edit Bio Form (hidden initially) -->
+      <div id="bioEditForm" style="display: none;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <textarea name="bio" rows="4" cols="50">{{ user_profile.bio }}</textarea><br>
+            <button type="submit" name="update_bio">Save bio</button>
+            <button type="button" onclick="cancelEditBio()">Cancel</button>
+        </form>
+      </div>
 
-<!-- Change Profile Photo Form (hidden initially) -->
-<div id="photoChangeForm" style="display: none;">
-  <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="file" name="photo" accept="image/*"><br>
-      <button type="submit" name="update_photo">Змінити фото</button>
-      <button type="button" onclick="cancelChangePhoto()">Скасувати</button>
-  </form>
-</div>
-
-
-
+      <!-- Change Profile Photo Form (hidden initially) -->
+      <div id="photoChangeForm" style="display: none;">
+        <form id="photoForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="photo" accept="image/*" id="save_photo"><br>
+            <button type="submit" name="update_photo">Save photo</button>
+            <button type="button" onclick="cancelChangePhoto()">Cancel</button>
+        </form>
+      </div>
   </div>
 </div>
 
@@ -458,6 +455,10 @@ button:not(.disabled):hover {
         border-radius: 5px;
     }
 
+    #save_photo{
+      margin-left: 5px;
+    }
+
     #editBioButton:hover, #changePhotoButton:hover {
         background-color: #45a049;
     }
@@ -482,6 +483,7 @@ button:not(.disabled):hover {
         border: none;
         cursor: pointer;
         border-radius: 5px;
+        margin-top: 16px;
     }
 
     #bioEditForm button:hover, #photoChangeForm button:hover {
@@ -492,12 +494,16 @@ button:not(.disabled):hover {
     display: block;
 }
 
+h2{
+  margin-left: 10px;
+  margin-top: 15px;
+}
 
 p {
     margin-top: 21px;
     margin-bottom: 1rem;
     font-size: 21px;
-
+    margin-left: 10px;
 }
 
 .book-list {
@@ -797,7 +803,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('profileDisplay').style.display = "block";
     }
 
-    // Функція для зміни фото
+   // Функція для зміни фото профілю
     function changePhoto() {
         document.getElementById('profileDisplay').style.display = "none";
         document.getElementById('photoChangeForm').style.display = "block";
@@ -805,9 +811,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Функція для скасування зміни фото
     function cancelChangePhoto() {
-        document.getElementById('photoChangeForm').style.display = "none";
         document.getElementById('profileDisplay').style.display = "block";
+        document.getElementById('photoChangeForm').style.display = "none";
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('#photoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+            formData.append('update_photo', '1');  // <<< Додати прапорець для Django
+
+            fetch(window.location.href, {  // або fetch('/profile/change-photo/', ...)
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let timestamp = new Date().getTime();
+                    document.querySelector('.profile-photo').src = data.new_photo_url + '?t=' + timestamp;
+                    document.querySelector('.modal-photo').src = data.new_photo_url + '?t=' + timestamp;
+                    cancelChangePhoto();
+                } else {
+                    alert('Помилка при зміні фото.');
+                }
+            })
+            .catch(error => console.error('Помилка:', error));
+        });
+    });
+
+
 </script>
 
 
