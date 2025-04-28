@@ -38,4 +38,4 @@ def extract_pdf_details(pdf_path):
         return proxy.get_pdf_details()
     except MemoryError as e:
         print(e)
-        return None, None  # Або поверни спеціальний об’єкт чи статус
+        return None, None  

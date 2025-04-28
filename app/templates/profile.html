@@ -10,6 +10,51 @@
       <li><a href="#planning" class="tab-link">Planning</a></li>
     </ul>
 
+<!-- Profile Photo Top Right -->
+<div class="profile-photo-wrapper" onclick="toggleProfileModal()">
+  <img src="{{ user.profile.photo.url }}" alt="Profile Photo" class="profile-photo">
+</div>
+
+<!-- Modal with Profile Info -->
+<!-- Modal with Profile Info -->
+<div id="profileModal" class="modal">
+  <div class="modal-content">
+      <span class="close" onclick="toggleProfileModal()">&times;</span>
+      
+      <!-- Profile Display Section -->
+      <div id="profileDisplay">
+          <img src="{{ user.profile.photo.url }}" alt="Full Profile Photo" class="modal-photo">
+          <h2>{{ user.username }}</h2>
+          <p id="bioText">{{ user.profile.bio }}</p>
+          <button id="editBioButton" onclick="editBio()">Редагувати біо</button>
+          <button id="changePhotoButton" onclick="changePhoto()">Змінити фото</button>
+      </div>
+      
+    <!-- Edit Bio Form (hidden initially) -->
+<div id="bioEditForm" style="display: none;">
+  <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <textarea name="bio" rows="4" cols="50">{{ user.profile.bio }}</textarea><br>
+      <button type="submit" name="update_bio">Зберегти біо</button>
+      <button type="button" onclick="cancelEditBio()">Скасувати</button>
+  </form>
+</div>
+
+<!-- Change Profile Photo Form (hidden initially) -->
+<div id="photoChangeForm" style="display: none;">
+  <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="photo" accept="image/*"><br>
+      <button type="submit" name="update_photo">Змінити фото</button>
+      <button type="button" onclick="cancelChangePhoto()">Скасувати</button>
+  </form>
+</div>
+
+
+
+  </div>
+</div>
+
     <!-- Reading Tab -->
 <div id="reading" class="tab-content active-tab">
   <h2>Reading</h2>
@@ -329,6 +374,125 @@ button:not(.disabled):hover {
   height: 218px;
 }
 
+/* Profile Photo */
+.profile-photo-wrapper {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+}
+
+.profile-photo {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  margin-top: 58px;
+  border-radius: 50%;
+  border: 2px solid #4A90E2;
+}
+
+/* Modal Styling */
+/* Стилі для модального вікна */
+ /* Стилі для модального вікна */
+ .modal {
+        display: none; /* Спочатку вікно приховане */
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4); /* Напівпрозорий фон */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+    }
+
+    .modal-photo {
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Стилі для фото профілю */
+    .profile-photo-wrapper {
+        cursor: pointer;
+    }
+
+    .profile-photo {
+        width: 50px; /* Розмір фото */
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* Кнопки редагування */
+    #editBioButton, #changePhotoButton {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    #editBioButton:hover, #changePhotoButton:hover {
+        background-color: #45a049;
+    }
+
+    /* Стилі для форм редагування */
+    #bioEditForm, #photoChangeForm {
+        margin-top: 20px;
+        display: none;
+    }
+    
+    #bioEditForm textarea {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 10px;
+    }
+
+    #bioEditForm button, #photoChangeForm button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    #bioEditForm button:hover, #photoChangeForm button:hover {
+        background-color: #45a049;
+    }
+
+    #profileDisplay {
+    display: block;
+}
+
+
 p {
     margin-top: 21px;
     margin-bottom: 1rem;
@@ -577,6 +741,36 @@ form button:hover {
   });
 
 
+  function toggleProfileModal() {
+  const modal = document.getElementById('profileModal');
+  modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleReviewForm(bookId) {
+  const form = document.getElementById(`review-form-${bookId}`);
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+// Tabs logic
+document.addEventListener("DOMContentLoaded", function () {
+  const tabs = document.querySelectorAll(".tab-link");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", function (e) {
+      e.preventDefault();
+      const targetId = this.getAttribute("href").substring(1);
+
+      tabs.forEach(t => t.classList.remove("active"));
+      tabContents.forEach(tc => tc.classList.remove("active-tab"));
+
+      this.classList.add("active");
+      document.getElementById(targetId).classList.add("active-tab");
+    });
+  });
+});
+
+
   function toggleReviewForm(bookId) {
     const reviewForm = document.getElementById('review-form-' + bookId);
     if (reviewForm.style.display === 'none') {
@@ -586,6 +780,34 @@ form button:hover {
     }
 }
 
+
+// Функція для відкриття/закриття модалки профілю
+
+    // Функція для редагування біо
+    function editBio() {
+    console.log("editBio triggered");  // Це виведе повідомлення в консоль
+    document.getElementById('profileDisplay').style.display = "none";
+    document.getElementById('bioEditForm').style.display = "block";
+}
+
+
+    // Функція для скасування редагування біо
+    function cancelEditBio() {
+        document.getElementById('bioEditForm').style.display = "none";
+        document.getElementById('profileDisplay').style.display = "block";
+    }
+
+    // Функція для зміни фото
+    function changePhoto() {
+        document.getElementById('profileDisplay').style.display = "none";
+        document.getElementById('photoChangeForm').style.display = "block";
+    }
+
+    // Функція для скасування зміни фото
+    function cancelChangePhoto() {
+        document.getElementById('photoChangeForm').style.display = "none";
+        document.getElementById('profileDisplay').style.display = "block";
+    }
 </script>
 
 

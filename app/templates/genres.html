@@ -52,32 +52,30 @@
     <!-- Основні категорії у вигляді випадаючих списків -->
     <div class="categories">
         {% for category, subcategories in categories.items %}
-        <div class="category">
-          <button class="category-btn" onclick="toggleSubcategories('{{ category }}')">{{ category }}</button>
-          <ul id="subcategories-{{ category }}" style="display:none;">
-            {% for subcategory in subcategories %}
-              <li>
-                <button class="subcategory-btn" onclick="toggleBooksBySubcategory('{{ subcategory }}')">{{ subcategory }}</button>
-                <ul id="books-{{ subcategory }}" style="display:none;">
-                  {% for genre, books in books_by_subcategory %}
-                    {% if genre == subcategory %}
-                      {% for book in books %}
-                      <li class="book-list">
-                        <a href="{% url 'book_detail' book.id %}">{{ book.book_title }}</a> by {{ book.author }}
-                      </li>
-                      
+            <div class="category">
+              <button class="category-btn" onclick="toggleSubcategories('{{ category }}')">{{ category }}</button>
+              <ul id="subcategories-{{ category }}" style="display:none;">
+                {% for subcategory in subcategories %}
+                  <li>
+                    <button class="subcategory-btn" onclick="toggleBooksBySubcategory('{{ subcategory }}')">{{ subcategory }}</button>
+                    <ul id="books-{{ subcategory }}" style="display:none;">
+                      {% for genre, books in books_by_subcategory %}
+                        {% if genre == subcategory %}
+                          {% for book in books %}
+                          <li class="book-list">
+                            <a href="{% url 'book_detail' book.id %}">{{ book.book_title }}</a> by {{ book.author }}
+                          </li>
+                          {% endfor %}
+                        {% endif %}
                       {% endfor %}
-                    {% endif %}
-                  {% endfor %}
-                </ul>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      {% endfor %}
-      
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+        {% endfor %}
     </div>
-
+    
     <script>
         // Функція для перемикання підкатегорій
         function toggleSubcategories(category) {

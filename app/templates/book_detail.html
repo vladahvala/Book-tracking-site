@@ -177,8 +177,8 @@
                 </div>
               <h2>Comments</h2>
               {% if not book.comments.all %}
-                No comments yet <a href="{% url 'add_comment' book.pk %}">Add Comment</a>
-                Add One</a>
+                No comments yet 
+                <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
               {% else %}  
               <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
               <br><br>

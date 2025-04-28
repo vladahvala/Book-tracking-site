@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserBook
+from .models import UserBook, UserProfile
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -37,3 +37,8 @@ class ReviewForm(forms.ModelForm):
         widgets = {
             'review': forms.Textarea(attrs={'rows': 4, 'cols': 50}),  # Текстове поле для відгуку
         }
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['photo', 'bio']

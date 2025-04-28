@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .utils.utils import find_similar_books
-from .models import Book, UserBook, Comment
-from .forms import UserBookForm
+from .models import Book, UserBook, Comment, UserProfile
+from .forms import UserBookForm, UserProfileForm
 
 from django.db.models import Count
 import plotly.graph_objs as go
@@ -24,12 +24,13 @@ from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateR
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 from .patterns.states import UnreadState, ReadingState, ReadState
 from .patterns.services import BookDetailBuilder
-from .patterns.abstract_factories import (
-    BusinessLiteratureFactory, DetectivesAndThrillersFactory, NonfictionLiteratureFactory,
-    HomeAndFamilyFactory, ArtAndDesignFactory, ComputersAndInternetFactory, 
-    ChildrensLiteratureFactory, RomanceNovelsFactory, ScienceAndEducationFactory,
-    PoetryFactory, AdventureFactory, ProseFactory, SciFiAndFantasyFactory, HumorFactory
-)
+# from .patterns.abstract_factories import (
+#     BusinessLiteratureFactory, DetectivesAndThrillersFactory, NonfictionLiteratureFactory,
+#     HomeAndFamilyFactory, ArtAndDesignFactory, ComputersAndInternetFactory, 
+#     ChildrensLiteratureFactory, RomanceNovelsFactory, ScienceAndEducationFactory,
+#     PoetryFactory, AdventureFactory, ProseFactory, SciFiAndFantasyFactory, HumorFactory
+# )
+from .patterns.abstract_factories import DynamicCategoryFactory
 
 from app.utils.pdf_utils import PDFProxy
 
@@ -76,41 +77,50 @@ def logoutUser(request):
 # book genres 
 # (books sorted in categories)
 def genres(request):
-    # Створення фабрик для категорій
-    factories = [
-        BusinessLiteratureFactory(),
-        DetectivesAndThrillersFactory(),
-        NonfictionLiteratureFactory(),
-        HomeAndFamilyFactory(),
-        ArtAndDesignFactory(),
-        ComputersAndInternetFactory(),
-        ChildrensLiteratureFactory(),
-        RomanceNovelsFactory(),
-        ScienceAndEducationFactory(),
-        PoetryFactory(),
-        AdventureFactory(),
-        ProseFactory(),
-        SciFiAndFantasyFactory(),
-        HumorFactory()
-    ]
-    
-    categories = {}
+    # Початкові категорії та підкатегорії
+#     categories_config = {
+#         "Business Literature": ["Business Literature", "Career & HR", "Marketing & PR", "Finance", "Economics"],
+#         "Detectives and Thrillers": ["Action", "Detectives", "Humorous & Women's Detectives", "Historical Detective", 
+# "Classic Detective", "Crime Detective", "Hard-Boiled Detective", "Political Detective", 
+# "Police Detective", "Maniac Stories", "Soviet Detective", "Thriller", "Espionage Detective"],
+#         "Nonfiction Literature": ["Biographies & Memoirs", "Military Documentary & Analysis", "Military Science", 
+# "Geography & Travel Notes", "General Nonfiction", "Journalism & Publicism"],
+#         "Home and Family": ["Cars & Traffic Rules", "Martial Arts & Sports", "Pets", "Home Economics", "Health", "Cooking", "Entertainment"],
+#         "Art and Design": ["Painting, Albums, Illustrated Catalogs", "Art & Design", "Art Criticism", "Cinema & Film", 
+# "Music", "Theatre", "Sculpture & Architecture"],
+#         "Computers and Internet": ["Foreign Computer Literature", "Computer Hardware & Digital Signal Processing", 
+# "Operating Systems, Networks & Internet", "Programming, Software & Databases", 
+# "Computer Tutorials & Guides"],
+#         "Children's Literature": ["General Children's Literature", "Educational Literature for Children", 
+# "Thrilling Literature for Children", "Games & Exercises for Children", "World Folk Tales"],
+#         "Romance Novels": ["Historical Romance", "Short Romance Stories", "Romantic Fantasy", "Romantic Thrillers", "Contemporary Romance"],
+#         "Science and Education": ["Alternative Medicine", "Alternative Sciences & Theories", "Biology, Biophysics & Biochemistry", 
+# "Military History", "Law & Government"],
+#         "Poetry": ["Classical foreign poetry", "Song lyrics poetry", "Modern foreign poetry"],
+#         "Adventure": ["Adventure novel", "Adventures", "Modern world adventures", "Nature and animals", "Maritime adventures"],
+#         "Prose": ["Gothic novel", "Classical prose of the 19th century", "War prose", "Phantasmagoria, absurdist prose", "Epistolary prose"],
+#         "Sci-Fi and Fantasy": ["Heroic fantasy", "Cyberpunk", "Mythological fantasy", "Dystopia", "Post-apocalypse", "Slavic fantasy", 
+# "Horror", "Steampunk", "Fantasy", "Epic science fiction", "Fairytale", "Modern fairy tale"],
+#         "Humor": ["Jokes", "Satire", "Humor"]
+#     }
+
+    # Створення однієї універсальної фабрики
+    factory = DynamicCategoryFactory()
+
+    categories = factory.categories  # Отримуємо категорії з фабрики
     books_by_subcategory = []
 
-    # Використовуємо фабрики для отримання категорій та книжок
-    for factory in factories:
-        category_names = factory.create_categories()
-        categories.update({category_names[0]: category_names})  # додаємо перше значення як ключ
-        
-        # Отримуємо книжки для кожної підкатегорії
-        books = list(factory.create_books_by_subcategory())
-        for category in category_names:
-            books_by_subcategory.append((category, books))
+    for main_category, subcategories in categories.items():
+        for subcategory in subcategories:
+            # Отримуємо книжки за жанром (підкатегорією)
+            books = list(Book.objects.filter(Category=main_category, genre=subcategory).values('id', 'book_title', 'author'))
+            books_by_subcategory.append((subcategory, books))
 
     return render(request, 'genres.html', {
         'categories': categories,
         'books_by_subcategory': books_by_subcategory,
     })
+
 
 
 # search for a certain book by title/author/genre
@@ -288,12 +298,14 @@ def book_detail(request, pk):
 # (books sorted in tabs reading/read/planning)
 @login_required_custom(login_url='login')
 def profile(request):
-    user = request.user  # Отримуємо аутентифікованого користувача
-
-    # Використовуємо `user` замість `session_key`
+    user = request.user
     invoker = CommandInvoker()
 
-    if request.method == 'POST':
+    # Отримуємо або створюємо профіль
+    user_profile, created = UserProfile.objects.get_or_create(user=user)
+
+    # --- Обробка змін книжки --- 
+    if request.method == 'POST' and request.POST.get('action'):
         book_id = request.POST.get('book')
         action = request.POST.get('action')
         status = request.POST.get('status')
@@ -303,7 +315,6 @@ def profile(request):
         if book_id:
             try:
                 book = Book.objects.get(id=book_id)
-                # Замінили session_key на user
                 user_book = UserBook.objects.get(user=user, book=book)
 
                 if action == 'update_status' and status:
@@ -314,38 +325,68 @@ def profile(request):
                     invoker.add_command(UpdateReviewCommand(user_book, review))
 
                 invoker.execute_commands()
-
+                messages.success(request, "Інформацію про книжку оновлено.")
                 return redirect('profile')
             except (Book.DoesNotExist, UserBook.DoesNotExist):
-                pass
+                messages.error(request, "Книжку не знайдено або її немає у вашому списку.")
 
+   # --- Обробка зміни біо ---
+    if request.method == 'POST' and 'update_bio' in request.POST:
+        bio = request.POST.get('bio')
+        if bio:
+            user_profile.bio = bio
+            user_profile.save()
+            messages.success(request, "Біо оновлено.")
+            return redirect('profile')
+
+    # --- Обробка зміни фото ---
+    if request.method == 'POST' and 'update_photo' in request.FILES:
+        photo = request.FILES.get('photo')
+        if photo:
+            user_profile.photo = photo
+            user_profile.save()
+            messages.success(request, "Фото профілю змінено.")
+            return redirect('profile')
+
+
+
+    # --- Обробка форми профілю --- 
+    if request.method == 'POST' and 'update_profile' in request.POST:
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        if profile_form.is_valid():
+            profile_form.save()
+            messages.success(request, "Профіль оновлено.")
+            return redirect('profile')
+    else:
+        profile_form = UserProfileForm(instance=user_profile)
+
+    # --- Дані про книжки --- 
     user_books = UserBook.objects.filter(user=user)
     reading_books = user_books.filter(status='reading')
     read_books = user_books.filter(status='read')
     planning_books = user_books.filter(status='planning')
 
-    # Pagination for each group of books
+    # --- Пагінація --- 
     reading_page = request.GET.get('reading_page', 1)
     read_page = request.GET.get('read_page', 1)
     planning_page = request.GET.get('planning_page', 1)
 
-    # Create Paginator objects for each group
-    reading_paginator = Paginator(reading_books, 6)  # 6 books per page
+    reading_paginator = Paginator(reading_books, 6)
     read_paginator = Paginator(read_books, 6)
     planning_paginator = Paginator(planning_books, 6)
 
-    # Get the current page for each category
     reading_books_page = reading_paginator.get_page(reading_page)
     read_books_page = read_paginator.get_page(read_page)
     planning_books_page = planning_paginator.get_page(planning_page)
 
     return render(request, 'profile.html', {
         'form': UserBookForm(),
+        'profile_form': profile_form,
+        'user_profile': user_profile,
         'reading_books_page': reading_books_page,
         'read_books_page': read_books_page,
         'planning_books_page': planning_books_page,
     })
-
 
 # book status
 # (reading for books in process/read for read books/planning for books the user 

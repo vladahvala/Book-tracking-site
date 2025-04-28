@@ -3,12 +3,18 @@
 {% block title %}Add comment to {{ book.book_title }}{% endblock %}
 
 {% block content %}
-<h1>Add comment to "{{ book.book_title }}"</h1>
-<br><br>
-
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button class="btn btn-secondary">Add comment</button>
-</form>
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Add Comment to "{{ book.book_title }}"</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-secondary mt-3" type="submit">Add comment</button>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

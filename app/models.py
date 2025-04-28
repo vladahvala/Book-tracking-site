@@ -77,6 +77,14 @@ class BookRequest(models.Model):
     def __str__(self):
         return f"Request for {self.book_title} by {self.author} on {self.created_at}"
     
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='profile_photos/', default='default.jpg')
+    bio = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.user.username
         
 class Comment(models.Model):
     book = models.ForeignKey(Book, related_name="comments", on_delete=models.CASCADE)
