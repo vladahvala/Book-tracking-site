@@ -34,6 +34,8 @@ from .patterns.abstract_factories import DynamicCategoryFactory
 
 from app.utils.pdf_utils import PDFProxy
 
+from django.contrib.auth.models import User
+
 # ==== PATTERN DECORATOR ==== 
 # Structural 
 
@@ -304,12 +306,16 @@ def book_detail(request, pk):
 
 # profile book page 
 # (books sorted in tabs reading/read/planning)
-@login_required_custom(login_url='login')
-def profile(request):
-    user = request.user
-    invoker = CommandInvoker()
+@login_required
+def profile(request, username=None):
+    # Якщо username не передано, відображаємо профіль поточного користувача
+    if username is None:
+        user = request.user
+    else:
+        # Отримуємо профіль користувача, чий профіль переглядаємо
+        user = get_object_or_404(User, username=username)
 
-    # Отримуємо або створюємо профіль
+    invoker = CommandInvoker()
     user_profile, created = UserProfile.objects.get_or_create(user=user)
 
     # --- Обробка змін книжки --- 
@@ -338,7 +344,7 @@ def profile(request):
             except (Book.DoesNotExist, UserBook.DoesNotExist):
                 messages.error(request, "Книжку не знайдено або її немає у вашому списку.")
 
-    # --- Обробка зміни біо ---
+    # --- Обробка зміни біо --- 
     if request.method == 'POST' and 'update_bio' in request.POST:
         bio = request.POST.get('bio')
         if bio:
@@ -347,8 +353,7 @@ def profile(request):
             messages.success(request, "Біо оновлено.")
             return redirect('profile')
 
-    # --- Обробка зміни фото ---
-   # --- Обробка зміни фото через AJAX ---
+    # --- Обробка зміни фото через AJAX --- 
     if request.method == 'POST' and 'update_photo' in request.POST:
         if 'photo' in request.FILES:
             photo = request.FILES['photo']
@@ -377,7 +382,7 @@ def profile(request):
     read_books = user_books.filter(status='read')
     planning_books = user_books.filter(status='planning')
 
-    # --- Пагінація --- 
+   # Пагінація 
     reading_page = request.GET.get('reading_page', 1)
     read_page = request.GET.get('read_page', 1)
     planning_page = request.GET.get('planning_page', 1)
@@ -386,17 +391,36 @@ def profile(request):
     read_paginator = Paginator(read_books, 6)
     planning_paginator = Paginator(planning_books, 6)
 
-    reading_books_page = reading_paginator.get_page(reading_page)
-    read_books_page = read_paginator.get_page(read_page)
-    planning_books_page = planning_paginator.get_page(planning_page)
-
     return render(request, 'profile.html', {
         'form': UserBookForm(),
-        'profile_form': profile_form,
+        'profile_form': UserProfileForm(instance=user_profile),
         'user_profile': user_profile,
-        'reading_books_page': reading_books_page,
-        'read_books_page': read_books_page,
-        'planning_books_page': planning_books_page,
+        'reading_books_page': reading_paginator.get_page(reading_page),
+        'read_books_page': read_paginator.get_page(read_page),
+        'planning_books_page': planning_paginator.get_page(planning_page),
+        'is_own_profile': request.user == user,  # Перевірка на власника профілю
+    })
+
+
+# ------------------------------
+# 🔍 Публічний профіль інших користувачів
+# ------------------------------
+
+def public_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    user_profile = get_object_or_404(UserProfile, user=user)
+
+    user_books = UserBook.objects.filter(user=user)
+    reading_books = user_books.filter(status='reading')
+    read_books = user_books.filter(status='read')
+    planning_books = user_books.filter(status='planning')
+
+    return render(request, 'profile.html', {
+        'user_profile': user_profile,
+        'reading_books_page': reading_books,
+        'read_books_page': read_books,
+        'planning_books_page': planning_books,
+        'is_own_profile': request.user == user,
     })
 
 # book status

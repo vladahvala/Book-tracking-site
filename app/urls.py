@@ -13,6 +13,7 @@ urlpatterns = [
     path('trends/', book_stats, name='trends'),
     path('about/', about, name='about'),
     path('profile/', views.profile, name='profile'),
+    path('profile/<str:username>/', views.public_profile, name='public_profile'),
     path('search/', views.search_certain_book, name='search_certain_book'),
     path('book/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
     path('submit_book_request/', views.submit_book_request, name='submit_book_request'),

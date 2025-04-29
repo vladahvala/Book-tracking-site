@@ -238,19 +238,25 @@
                             </li>
 
                             <li class="list-group-item">
+                                {% if user.is_authenticated and user_book and user == user_book.user %}
                                 <form method="post">
                                     {% csrf_token %}
-                                    <input type="hidden" name="book" value="{{ book.id }}">  <!-- додаємо ID книги -->
+                                    <input type="hidden" name="book" value="{{ book.id }}">
+                                    <input type="hidden" name="action" value="update_status">
                                     <strong><label for="status">Status:</label></strong>
-                                    <select name="status" {% if not user.is_authenticated %}disabled{% endif %}>
+                                    <select name="status">
                                         <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
                                         <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
                                         <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
                                         <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
                                     </select>
-                                    
-                                    <p><button class="update-status" type="submit" {% if not user.is_authenticated %}disabled{% endif %}>Update Status</button></p>
+                                    <p><button class="update-status" type="submit">Update Status</button></p>
                                 </form>
+                            
+                              {% else %}
+                                <p><strong>Status:</strong> {{ user_book.status|capfirst }}</p>
+                              {% endif %}
+                              
                                 
                                                              
                             </li>
@@ -262,30 +268,34 @@
                 </div>
                 <h2>Comments</h2>
                 {% if not book.comments.all %}
-                  <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
-                {% else %}  
-                  <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
-                  <br><br>
-                  {% for comment in book.comments.all %}
-                    <div class="comment">
-                      {% if comment.user and comment.user.userprofile %}
-                        <img src="{{ comment.user.userprofile.photo.url }}" alt="Profile photo" class="profile-photo" width="40" height="40">
-                        <strong>{{ comment.user.username }}</strong>
-                      {% else %}
-                        <img src="{% static 'images/default-user.png' %}" alt="Default photo" class="profile-photo" width="40" height="40">
-                        <strong>unregistered</strong>
-                      {% endif %}
-                      <br>
-                      <div class="comment-body">{{ comment.body }}</div>
-                      <div class="comment-date"> {{ comment.date_added }} </div>
-
-                      <!-- Кнопка видалення тільки для автора коментаря -->
-                            {% if comment.user == request.user or request.user.is_superuser %}
-                            <button class="delete-comment-btn" data-comment-id="{{ comment.id }}">Видалити</button>
-                        {% endif %}
-                    </div>
-                  {% endfor %}     
-                {% endif %}
+                <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
+              {% else %}  
+                <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
+                <br><br>
+                {% for comment in book.comments.all %}
+                  <div class="comment">
+                    {% if comment.user and comment.user.userprofile %}
+                      <img src="{{ comment.user.userprofile.photo.url }}" alt="Profile photo" class="profile-photo" width="40" height="40">
+                      <strong>
+                        <a href="{% url 'public_profile' comment.user.username %}">
+                          {{ comment.user.username }}
+                        </a>
+                      </strong>
+                    {% else %}
+                      <img src="{% static 'images/default-user.png' %}" alt="Default photo" class="profile-photo" width="40" height="40">
+                      <strong>unregistered</strong>
+                    {% endif %}
+                    <br>
+                    <div class="comment-body">{{ comment.body }}</div>
+                    <div class="comment-date">{{ comment.date_added }}</div>
+              
+                    {% if comment.user == request.user or request.user.is_superuser %}
+                      <button class="delete-comment-btn" data-comment-id="{{ comment.id }}">Видалити</button>
+                    {% endif %}
+                  </div>
+                {% endfor %}     
+              {% endif %}
+              
                 
             </div>
        

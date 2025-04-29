@@ -2,109 +2,122 @@
 
 
 {% block content %}
-  <h1>Your Book Profile</h1>
-  <div class="tabs">
-    <ul class="tab-list">
-      <li><a href="#reading" class="tab-link active">Reading</a></li>
-      <li><a href="#read" class="tab-link read-tab">Read</a></li>
-      <li><a href="#planning" class="tab-link">Planning</a></li>
-    </ul>
+{% if is_own_profile %}
+<h1>Your Book Profile</h1>
+{% else %}
+<h1>{{ user_profile.user.username }}'s Book Profile</h1>
+{% endif %}
 
-<!-- Profile Photo Top Right -->
-<div class="profile-photo-wrapper" onclick="toggleProfileModal()">
-  <img class="profile-photo" src="{{ user_profile.photo.url }}" alt="Фото профілю">
-  
-</div>
+<div class="tabs">
+  <ul class="tab-list">
+    <li><a href="#reading" class="tab-link active">Reading</a></li>
+    <li><a href="#read" class="tab-link read-tab">Read</a></li>
+    <li><a href="#planning" class="tab-link">Planning</a></li>
+  </ul>
 
-<!-- Modal with Profile Info -->
-<div id="profileModal" class="modal">
-  <div class="modal-content">
+  <!-- Profile Photo Top Right -->
+  <div class="profile-photo-wrapper" onclick="toggleProfileModal()">
+    <img class="profile-photo" src="{{ user_profile.photo.url }}" alt="Фото профілю">
+  </div>
+
+  <!-- Modal with Profile Info -->
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
       <span class="close" onclick="toggleProfileModal()">&times;</span>
-      
+
       <!-- Profile Display Section -->
       <div id="profileDisplay">
-          <img src="{{ user_profile.photo.url }}" alt="Full Profile Photo" class="modal-photo">
-          <h2>{{ user.username }}</h2>
-          <p id="bioText">{{ user_profile.bio }}</p>
+        <img src="{{ user_profile.photo.url }}" alt="Full Profile Photo" class="modal-photo">
+        <h2>{{ user_profile.user.username }}</h2>
+        <p id="bioText">{{ user_profile.bio }}</p>
+
+        <!-- Умова: якщо це свій профіль, показуємо кнопки редагування -->
+        {% if is_own_profile %}
           <button id="editBioButton" onclick="editBio()">Edit bio</button>
           <button id="changePhotoButton" onclick="changePhoto()">Edit photo</button>
+        {% endif %}
       </div>
-      
+
       <!-- Edit Bio Form (hidden initially) -->
       <div id="bioEditForm" style="display: none;">
         <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <textarea name="bio" rows="4" cols="50">{{ user_profile.bio }}</textarea><br>
-            <button type="submit" name="update_bio">Save bio</button>
-            <button type="button" onclick="cancelEditBio()">Cancel</button>
+          {% csrf_token %}
+          <textarea name="bio" rows="4" cols="50">{{ user_profile.bio }}</textarea><br>
+          <button type="submit" name="update_bio">Save bio</button>
+          <button type="button" onclick="cancelEditBio()">Cancel</button>
         </form>
       </div>
 
       <!-- Change Profile Photo Form (hidden initially) -->
       <div id="photoChangeForm" style="display: none;">
         <form id="photoForm" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="photo" accept="image/*" id="save_photo"><br>
-            <button type="submit" name="update_photo">Save photo</button>
-            <button type="button" onclick="cancelChangePhoto()">Cancel</button>
+          {% csrf_token %}
+          <input type="file" name="photo" accept="image/*" id="save_photo"><br>
+          <button type="submit" name="update_photo">Save photo</button>
+          <button type="button" onclick="cancelChangePhoto()">Cancel</button>
         </form>
       </div>
-  </div>
-</div>
-
-    <!-- Reading Tab -->
-<div id="reading" class="tab-content active-tab">
-  <h2>Reading</h2>
-  <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {% for user_book in reading_books_page %}
-          <div class="book-card">
-              <a href="{% url 'book_detail' user_book.book.id %}">
-              <img src="{{ user_book.book.image.url }}" alt="Book Cover">
-              <p><strong>{{ user_book.book.book_title }}</strong></p>
-            </a>
-              <p><strong>{{ user_book.book.author }}</strong></p>
-              <form method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="book" value="{{ user_book.book.id }}">
-                  <select name="status">
-                      <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
-                      <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
-                      <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
-                      <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
-                  </select>
-                  <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
-              </form>
-          </div>
-      {% empty %}
-          <p>No books in this category.</p>
-      {% endfor %}
-  </div>
-  {% if reading_books_page.paginator.count > 6 %}
-    <div class="pagination">
-        {% if reading_books_page.has_previous %}
-            <a href="?reading_page={{ reading_books_page.previous_page_number }}">«</a>
-        {% endif %}
-        {% for num in reading_books_page.paginator.page_range %}
-            <a href="?reading_page={{ num }}" class="{% if reading_books_page.number == num %}active{% endif %}">{{ num }}</a>
-        {% endfor %}
-        {% if reading_books_page.has_next %}
-            <a href="?reading_page={{ reading_books_page.next_page_number }}">»</a>
-        {% endif %}
     </div>
-  {% endif %}
+  </div>
+
+  <!-- Reading Tab -->
+  <div id="reading" class="tab-content active-tab">
+    <h2>Reading</h2>
+    <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {% for user_book in reading_books_page %}
+        <div class="book-card">
+          <a href="{% url 'book_detail' user_book.book.id %}">
+            <img src="{{ user_book.book.image.url }}" alt="Book Cover">
+            <p><strong>{{ user_book.book.book_title }}</strong></p>
+          </a>
+          <p><strong>{{ user_book.book.author }}</strong></p>
+
+          <!-- Умова: якщо це свій профіль, показуємо кнопки для зміни статусу -->
+          {% if is_own_profile %}
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="book" value="{{ user_book.book.id }}">
+              <select name="status">
+                <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+              </select>
+              <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
+            </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>No books in this category.</p>
+      {% endfor %}
+    </div>
+{% if reading_books_page.paginator.count > 6 %}
+  <div class="pagination">
+      {% if reading_books_page.has_previous %}
+          <a href="?reading_page={{ reading_books_page.previous_page_number }}">«</a>
+      {% endif %}
+      {% for num in reading_books_page.paginator.page_range %}
+          <a href="?reading_page={{ num }}" class="{% if reading_books_page.number == num %}active{% endif %}">{{ num }}</a>
+      {% endfor %}
+      {% if reading_books_page.has_next %}
+          <a href="?reading_page={{ reading_books_page.next_page_number }}">»</a>
+      {% endif %}
+  </div>
+{% endif %}
 </div>
 
 <!-- Read Tab -->
 <div id="read" class="tab-content">
-  <h2>Read</h2>
-  <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {% for user_book in read_books_page %}
-          <div class="book-card">
-            <a href="{% url 'book_detail' user_book.book.id %}">
-              <img src="{{ user_book.book.image.url }}" alt="Book Cover">
-              <p><strong>{{ user_book.book.book_title }}</strong></p>
-            </a>
-              <p><strong>{{ user_book.book.author }}</strong></p>
+<h2>Read</h2>
+<div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% for user_book in read_books_page %}
+        <div class="book-card">
+          <a href="{% url 'book_detail' user_book.book.id %}">
+            <img src="{{ user_book.book.image.url }}" alt="Book Cover">
+            <p><strong>{{ user_book.book.book_title }}</strong></p>
+          </a>
+            <p><strong>{{ user_book.book.author }}</strong></p>
+            {% if is_own_profile %}
               <form method="post">
                   {% csrf_token %}
                   <input type="hidden" name="book" value="{{ user_book.book.id }}">
@@ -120,10 +133,10 @@
                     {% for i in "54321" %}
                       {% with i|add:0 as star %}
                         <input type="radio"
-                               id="star{{ star }}-{{ user_book.book.id }}"
-                               name="rating"
-                               value="{{ star }}"
-                               {% if user_book.rating == star %}checked{% endif %}>
+                              id="star{{ star }}-{{ user_book.book.id }}"
+                              name="rating"
+                              value="{{ star }}"
+                              {% if user_book.rating == star %}checked{% endif %}>
                         <label for="star{{ star }}-{{ user_book.book.id }}">&#9733;</label>
                       {% endwith %}
                     {% endfor %}
@@ -145,69 +158,71 @@
                       </form>
                   </div>
                 </form>
-          </div>
-      {% empty %}
-          <p>No books in this category.</p>
+              {% endif %}
+        </div>
+    {% empty %}
+        <p>No books in this category.</p>
+    {% endfor %}
+</div>
+{% if read_books_page.paginator.count > 6 %}
+  <div class="pagination">
+      {% if read_books_page.has_previous %}
+          <a href="?read_page={{ read_books_page.previous_page_number }}">«</a>
+      {% endif %}
+      {% for num in read_books_page.paginator.page_range %}
+          <a href="?read_page={{ num }}" class="{% if read_books_page.number == num %}active{% endif %}">{{ num }}</a>
       {% endfor %}
+      {% if read_books_page.has_next %}
+          <a href="?read_page={{ read_books_page.next_page_number }}">»</a>
+      {% endif %}
   </div>
-  {% if read_books_page.paginator.count > 6 %}
-    <div class="pagination">
-        {% if read_books_page.has_previous %}
-            <a href="?read_page={{ read_books_page.previous_page_number }}">«</a>
-        {% endif %}
-        {% for num in read_books_page.paginator.page_range %}
-            <a href="?read_page={{ num }}" class="{% if read_books_page.number == num %}active{% endif %}">{{ num }}</a>
-        {% endfor %}
-        {% if read_books_page.has_next %}
-            <a href="?read_page={{ read_books_page.next_page_number }}">»</a>
-        {% endif %}
-    </div>
-  {% endif %}
+{% endif %}
 </div>
 
 <!-- Planning Tab -->
 <div id="planning" class="tab-content">
-  <h2>Planning</h2>
-  <div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {% for user_book in planning_books_page %}
-          <div class="book-card">
-            <a href="{% url 'book_detail' user_book.book.id %}">
-              <img src="{{ user_book.book.image.url }}" alt="Book Cover">
-              <p><strong>{{ user_book.book.book_title }}</strong></p>
-            </a>
-              <p><strong>{{ user_book.book.author }}</strong></p>
-              <form method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="book" value="{{ user_book.book.id }}">
-                  <select name="status">
-                      <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
-                      <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
-                      <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
-                      <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
-                  </select>
-                  <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
-              </form>
-          </div>
-      {% empty %}
-          <p>No books in this category.</p>
-      {% endfor %}
-  </div>
-  {% if planning_books_page.paginator.count > 6 %}
-    <div class="pagination">
-        {% if planning_books_page.has_previous %}
-            <a href="?planning_page={{ planning_books_page.previous_page_number }}">«</a>
-        {% endif %}
-        {% for num in planning_books_page.paginator.page_range %}
-            <a href="?planning_page={{ num }}" class="{% if planning_books_page.number == num %}active{% endif %}">{{ num }}</a>
-        {% endfor %}
-        {% if planning_books_page.has_next %}
-            <a href="?planning_page={{ planning_books_page.next_page_number }}">»</a>
-        {% endif %}
-    </div>
-  {% endif %}
+<h2>Planning</h2>
+<div class="book-list grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% for user_book in planning_books_page %}
+        <div class="book-card">
+          <a href="{% url 'book_detail' user_book.book.id %}">
+            <img src="{{ user_book.book.image.url }}" alt="Book Cover">
+            <p><strong>{{ user_book.book.book_title }}</strong></p>
+          </a>
+            <p><strong>{{ user_book.book.author }}</strong></p>
+            {% if is_own_profile %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="book" value="{{ user_book.book.id }}">
+                <select name="status">
+                    <option value="unread" {% if user_book.status == "unread" %}selected{% endif %}>Unread</option>
+                    <option value="planning" {% if user_book.status == "planning" %}selected{% endif %}>Planning</option>
+                    <option value="reading" {% if user_book.status == "reading" %}selected{% endif %}>Reading</option>
+                    <option value="read" {% if user_book.status == "read" %}selected{% endif %}>Read</option>
+                </select>
+                <button class="submin-btn update-status" type="submit" name="action" value="update_status">Update Status</button>
+            </form>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No books in this category.</p>
+    {% endfor %}
 </div>
+{% if planning_books_page.paginator.count > 6 %}
+  <div class="pagination">
+      {% if planning_books_page.has_previous %}
+          <a href="?planning_page={{ planning_books_page.previous_page_number }}">«</a>
+      {% endif %}
+      {% for num in planning_books_page.paginator.page_range %}
+          <a href="?planning_page={{ num }}" class="{% if planning_books_page.number == num %}active{% endif %}">{{ num }}</a>
+      {% endfor %}
+      {% if planning_books_page.has_next %}
+          <a href="?planning_page={{ planning_books_page.next_page_number }}">»</a>
+      {% endif %}
   </div>
-
+{% endif %}
+</div>
+</div>
   <style>
 /* Загальний стиль для вкладок */
 
