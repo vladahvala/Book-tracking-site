@@ -213,25 +213,33 @@ def about(request):
 class AddCommentView(CreateView):
     model = Comment
     template_name = 'add_comment.html'
-    fields = ['name', 'body']  # book передаємо вручну
+    fields = ['body']  # Лише body, name заповнюється автоматично
 
     def form_valid(self, form):
-        # Прив’язуємо коментар до конкретної книги
         book = get_object_or_404(Book, pk=self.kwargs['pk'])
         form.instance.book = book
+        form.instance.user = self.request.user
+        form.instance.name = self.request.user.username  # 🧩 автоматично з юзера
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
-        # Щоб мати доступ до книги у шаблоні
         context = super().get_context_data(**kwargs)
         context['book'] = get_object_or_404(Book, pk=self.kwargs['pk'])
         return context
 
     def get_success_url(self):
-        # Повернення до сторінки детальної інформації про книгу
         return redirect('book_detail', pk=self.kwargs['pk']).url
-
-
+    
+   
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    
+    # Перевірка чи користувач є адміністратором або автором коментаря
+    if request.user.is_superuser or comment.user == request.user:
+        comment.delete()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'error': 'You are not authorized to delete this comment.'})
 
 
 # ==== AUTH VIEWS ====

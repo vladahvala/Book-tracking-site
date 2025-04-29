@@ -89,8 +89,9 @@ class UserProfile(models.Model):
 class Comment(models.Model):
     book = models.ForeignKey(Book, related_name="comments", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    body=models.TextField()
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # ← дозволяємо null
+    body = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '%s-%s' % (self.book.book_title, self.name)
+        return f'{self.book.book_title} - {self.name}'

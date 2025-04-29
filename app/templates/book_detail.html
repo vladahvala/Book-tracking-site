@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% load static %}
+
+
 {% block title %}{{ book.book_title }}{% endblock %}
 
 {% block css %}
@@ -72,6 +75,88 @@
             box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2); /* Увігнута тінь */
             transform: translateY(2px); /* Ефект натискання */
         }
+
+
+
+        .comment {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+
+.profile-photo{
+    border-radius: 50%;
+    border: 2px solid #8F87F1;
+}
+
+
+.comment-header strong {
+  font-size: 1.2em; /* Збільшено розмір шрифта */
+  color: #333;
+  font-weight: bold;
+}
+
+.comment-body {
+  margin-top: 10px;
+}
+
+.comment-body p {
+  font-size: 1em;
+  color: #555;
+  line-height: 1.6; /* Поліпшує читаність тексту */
+  margin-bottom: 10px;
+  padding-left: 10px;  /* Відступ для тексту */
+  border-left: 3px solid #007bff;  /* Лінія зліва для виділення тексту */
+}
+
+.comment-body small.comment-date {
+  color: #888;
+  font-size: 0.85em;
+  display: block;
+  text-align: right;  /* Відправляє дату в правий кут */
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-decoration: none;
+  margin-bottom: 25px;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+
+.comment-body{
+    margin-top: 12px;
+    margin-left: 5px;
+    margin-bottom: 15px;
+}
+
+.comment-date {
+  position: absolute;
+  bottom: 11px;
+  right: 9px;
+  font-size: 0.8em;
+  color: #777;
+}
+
 
     </style>
 {% endblock %}
@@ -175,22 +260,33 @@
                         </ul>
                     </div>
                 </div>
-              <h2>Comments</h2>
-              {% if not book.comments.all %}
-                No comments yet 
-                <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
-              {% else %}  
-              <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
-              <br><br>
-                    {% for comment in book.comments.all %}
-                        <strong>
-                            {{ comment.name }} - {{ comment.date_added }}
-                        </strong>    
-                        <br>
-                        {{ comment.body }}
-                        <br><br><br>
-                    {% endfor %}     
-              {% endif %} 
+                <h2>Comments</h2>
+                {% if not book.comments.all %}
+                  <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
+                {% else %}  
+                  <a href="{% url 'add_comment' book.pk %}" class="btn btn-primary btn-sm">Add Comment</a>
+                  <br><br>
+                  {% for comment in book.comments.all %}
+                    <div class="comment">
+                      {% if comment.user and comment.user.userprofile %}
+                        <img src="{{ comment.user.userprofile.photo.url }}" alt="Profile photo" class="profile-photo" width="40" height="40">
+                        <strong>{{ comment.user.username }}</strong>
+                      {% else %}
+                        <img src="{% static 'images/default-user.png' %}" alt="Default photo" class="profile-photo" width="40" height="40">
+                        <strong>unregistered</strong>
+                      {% endif %}
+                      <br>
+                      <div class="comment-body">{{ comment.body }}</div>
+                      <div class="comment-date"> {{ comment.date_added }} </div>
+
+                      <!-- Кнопка видалення тільки для автора коментаря -->
+                            {% if comment.user == request.user or request.user.is_superuser %}
+                            <button class="delete-comment-btn" data-comment-id="{{ comment.id }}">Видалити</button>
+                        {% endif %}
+                    </div>
+                  {% endfor %}     
+                {% endif %}
+                
             </div>
        
 
@@ -266,6 +362,32 @@
         }
     }
 });
+
+
+
+document.querySelectorAll('.delete-comment-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const commentId = button.getAttribute('data-comment-id');
+        
+        // Запит на видалення коментаря
+        fetch(`/delete_comment/${commentId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                button.closest('.comment').remove(); // Видаляємо коментар з DOM
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error('Помилка:', error));
+    });
+});
+
 
 </script>
 {% endblock %}
