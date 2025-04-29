@@ -24,13 +24,7 @@ from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateR
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 from .patterns.states import UnreadState, ReadingState, ReadState
 from .patterns.services import BookDetailBuilder
-# from .patterns.abstract_factories import (
-#     BusinessLiteratureFactory, DetectivesAndThrillersFactory, NonfictionLiteratureFactory,
-#     HomeAndFamilyFactory, ArtAndDesignFactory, ComputersAndInternetFactory, 
-#     ChildrensLiteratureFactory, RomanceNovelsFactory, ScienceAndEducationFactory,
-#     PoetryFactory, AdventureFactory, ProseFactory, SciFiAndFantasyFactory, HumorFactory
-# )
-from .patterns.abstract_factories import DynamicCategoryFactory
+from .patterns.genre_builder import CategoryBuilder
 
 from app.utils.pdf_utils import PDFProxy
 
@@ -78,7 +72,6 @@ def logoutUser(request):
 
 # book genres 
 # (books sorted in categories)
-def genres(request):
     # Початкові категорії та підкатегорії
 #     categories_config = {
 #         "Business Literature": ["Business Literature", "Career & HR", "Marketing & PR", "Finance", "Economics"],
@@ -107,15 +100,19 @@ def genres(request):
 #     }
 
     # Створення однієї універсальної фабрики
-    factory = DynamicCategoryFactory()
 
-    categories = factory.categories  # Отримуємо категорії з фабрики
+def genres(request):
+    builder = CategoryBuilder().initialize_from_books()
+    categories = builder.build()  # Отримуємо категорії та підкатегорії
+
     books_by_subcategory = []
 
     for main_category, subcategories in categories.items():
         for subcategory in subcategories:
-            # Отримуємо книжки за жанром (підкатегорією)
-            books = list(Book.objects.filter(Category=main_category, genre=subcategory).values('id', 'book_title', 'author'))
+            books = list(
+                Book.objects.filter(Category=main_category, genre=subcategory)
+                .values('id', 'book_title', 'author')
+            )
             books_by_subcategory.append((subcategory, books))
 
     return render(request, 'genres.html', {
