@@ -80,7 +80,7 @@ class BookRequest(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    photo = models.ImageField(upload_to='profile_photos/', default='default.jpg')
+    photo = models.ImageField(upload_to='profile_photos/', default='profile_photos/default_profile_photo.jpg')
     bio = models.TextField(blank=True)
 
     def __str__(self):

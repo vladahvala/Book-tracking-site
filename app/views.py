@@ -23,8 +23,8 @@ from .patterns.handlers import LoginHandler, RegisterHandler
 from .patterns.commands import UpdateStatusCommand, UpdateRatingCommand, UpdateReviewCommand, CommandInvoker
 from .patterns.search_handlers import TitleSearchHandler, AuthorSearchHandler, GenreSearchHandler, SortSearchHandler
 from .patterns.states import UnreadState, ReadingState, ReadState
-from .patterns.services import BookDetailBuilder
 from .patterns.genre_builder import CategoryBuilder
+from .patterns.facade import BookDetailFacade  # новий клас
 
 from app.utils.pdf_utils import PDFProxy
 
@@ -99,8 +99,8 @@ def logoutUser(request):
 #         "Humor": ["Jokes", "Satire", "Humor"]
 #     }
 
-    # Створення однієї універсальної фабрики
-
+# book genres 
+# (books sorted in categories)
 def genres(request):
     builder = CategoryBuilder().initialize_from_books()
     categories = builder.build()  # Отримуємо категорії та підкатегорії
@@ -246,11 +246,10 @@ def delete_comment(request, comment_id):
 # book properties for each book
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
-    user = request.user if request.user.is_authenticated else None  
-
+    user = request.user if request.user.is_authenticated else None
     confirm = request.GET.get("confirm_download", "false") == "true"
 
-    # Перевірка розміру файлу через проксі
+    # Проксі-перевірка розміру PDF
     proxy = PDFProxy(book.file.path)
     try:
         file_too_large = proxy.is_too_large()
@@ -259,51 +258,45 @@ def book_detail(request, pk):
         file_too_large = False
         file_size = None
 
-    # Побудова деталей книги
-    builder = BookDetailBuilder(book, user)
-    builder.set_user_book() \
-           .set_similar_books(Book.objects.exclude(pk=pk))
+    # Facade для збирання деталей
+    facade = BookDetailFacade(book, user)
+    context = facade.build_details(
+        all_books=Book.objects.exclude(pk=pk),
+        confirm_download=(confirm or not file_too_large)
+    )
 
-    # Завантажувати PDF-деталі тільки якщо не великий файл або є підтвердження
-    if not file_too_large or confirm:
-        builder.set_pdf_details()
-    else:
-        builder.num_pages = None
-        builder.file_size = file_size
-
-    context = builder.build()
+    # Додаємо додаткові змінні
     context.update({
-        "book": book,
         "is_large_file": file_too_large,
         "file_size": file_size,
         "confirm_download": confirm,
-        "num_pages": builder.num_pages,
-        "file_size_mb": builder.file_size,
+        "num_pages": facade.num_pages,
+        "file_size_mb": facade.file_size_mb,
     })
 
-    # Логіка зміни статусу (тільки для авторизованих користувачів)
-    if request.method == 'POST' and user:  # Тільки для авторизованих користувачів
+    # Обробка POST-запиту
+    if request.method == 'POST' and user:
         status = request.POST.get('status')
         user_book, _ = UserBook.objects.get_or_create(user=user, book=book)
 
         if status == 'unread':
-            user_book.delete()  
+            user_book.delete()
         else:
             user_book.status = status
             user_book.save()
 
         return redirect('book_detail', pk=pk)
 
+    # Обробка підтвердження через AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({"status": "confirmed", "file_url": book.file.url})
 
     return render(request, 'book_detail.html', context)
 
 
-
 # profile book page 
 # (books sorted in tabs reading/read/planning)
-@login_required
+@login_required_custom(login_url='login')
 def profile(request, username=None):
     # Якщо username не передано, відображаємо профіль поточного користувача
     if username is None:
@@ -399,10 +392,7 @@ def profile(request, username=None):
     })
 
 
-# ------------------------------
-# 🔍 Публічний профіль інших користувачів
-# ------------------------------
-
+# public profile for other users
 def public_profile(request, username):
     user = get_object_or_404(User, username=username)
     user_profile = get_object_or_404(UserProfile, user=user)
@@ -419,6 +409,7 @@ def public_profile(request, username):
         'planning_books_page': planning_books,
         'is_own_profile': request.user == user,
     })
+
 
 # book status
 # (reading for books in process/read for read books/planning for books the user 

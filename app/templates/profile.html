@@ -17,7 +17,13 @@
 
   <!-- Profile Photo Top Right -->
   <div class="profile-photo-wrapper" onclick="toggleProfileModal()">
+    {% if user_profile.photo %}
     <img class="profile-photo" src="{{ user_profile.photo.url }}" alt="Фото профілю">
+{% else %}
+    <img src="/media/default_profile_photo.jpg" alt="Дефолтне фото">
+{% endif %}
+
+    
   </div>
 
   <!-- Modal with Profile Info -->
