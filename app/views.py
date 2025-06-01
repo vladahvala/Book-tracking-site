@@ -68,36 +68,6 @@ def logoutUser(request):
 
 
 
-# ==== GENERAL VIEWS ====
-
-# book genres 
-# (books sorted in categories)
-    # Початкові категорії та підкатегорії
-#     categories_config = {
-#         "Business Literature": ["Business Literature", "Career & HR", "Marketing & PR", "Finance", "Economics"],
-#         "Detectives and Thrillers": ["Action", "Detectives", "Humorous & Women's Detectives", "Historical Detective", 
-# "Classic Detective", "Crime Detective", "Hard-Boiled Detective", "Political Detective", 
-# "Police Detective", "Maniac Stories", "Soviet Detective", "Thriller", "Espionage Detective"],
-#         "Nonfiction Literature": ["Biographies & Memoirs", "Military Documentary & Analysis", "Military Science", 
-# "Geography & Travel Notes", "General Nonfiction", "Journalism & Publicism"],
-#         "Home and Family": ["Cars & Traffic Rules", "Martial Arts & Sports", "Pets", "Home Economics", "Health", "Cooking", "Entertainment"],
-#         "Art and Design": ["Painting, Albums, Illustrated Catalogs", "Art & Design", "Art Criticism", "Cinema & Film", 
-# "Music", "Theatre", "Sculpture & Architecture"],
-#         "Computers and Internet": ["Foreign Computer Literature", "Computer Hardware & Digital Signal Processing", 
-# "Operating Systems, Networks & Internet", "Programming, Software & Databases", 
-# "Computer Tutorials & Guides"],
-#         "Children's Literature": ["General Children's Literature", "Educational Literature for Children", 
-# "Thrilling Literature for Children", "Games & Exercises for Children", "World Folk Tales"],
-#         "Romance Novels": ["Historical Romance", "Short Romance Stories", "Romantic Fantasy", "Romantic Thrillers", "Contemporary Romance"],
-#         "Science and Education": ["Alternative Medicine", "Alternative Sciences & Theories", "Biology, Biophysics & Biochemistry", 
-# "Military History", "Law & Government"],
-#         "Poetry": ["Classical foreign poetry", "Song lyrics poetry", "Modern foreign poetry"],
-#         "Adventure": ["Adventure novel", "Adventures", "Modern world adventures", "Nature and animals", "Maritime adventures"],
-#         "Prose": ["Gothic novel", "Classical prose of the 19th century", "War prose", "Phantasmagoria, absurdist prose", "Epistolary prose"],
-#         "Sci-Fi and Fantasy": ["Heroic fantasy", "Cyberpunk", "Mythological fantasy", "Dystopia", "Post-apocalypse", "Slavic fantasy", 
-# "Horror", "Steampunk", "Fantasy", "Epic science fiction", "Fairytale", "Modern fairy tale"],
-#         "Humor": ["Jokes", "Satire", "Humor"]
-#     }
 
 # book genres 
 # (books sorted in categories)
